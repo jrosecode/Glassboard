@@ -61,6 +61,10 @@ The SQL migration uses workspace membership helpers and RLS on every application
 - Drag cards with pointer or keyboard; list and card ordering is persisted
 - Board, table, calendar, timeline, and dashboard views share the same card state
 
+## iOS integration
+
+The same Supabase project is ready for an iOS client, including email/password auth without email confirmation, shared RLS-protected data, Realtime, private attachments, and the `glassboard://auth/callback` redirect. See [`docs/ios-integration.md`](docs/ios-integration.md).
+
 ## Deployment
 
 `netlify.toml` builds `dist` and sends SPA routes to `index.html`. Configure both `VITE_SUPABASE_*` variables in the Netlify environment and add the deployed origin to Supabase Auth redirects before building. No deployment is performed by this repository.

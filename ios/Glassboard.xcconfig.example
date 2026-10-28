@@ -1,0 +1,5 @@
+// Copy to Glassboard.xcconfig and add the public publishable key.
+// Never put a secret/service-role key in an iOS application.
+SUPABASE_URL = https:/$()/atjaxxsvrqehjrtrqpzd.supabase.co
+SUPABASE_PUBLISHABLE_KEY = your-publishable-key
+GLASSBOARD_AUTH_SCHEME = glassboard
