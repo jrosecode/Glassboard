@@ -1,0 +1,2 @@
+import React from 'react';import ReactDOM from 'react-dom/client';import {BrowserRouter} from 'react-router-dom';import {App} from './App';import './index.css';
+const testMode=import.meta.env.MODE==='test'&&new URLSearchParams(location.search).get('test')==='1';ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><App testMode={testMode}/></BrowserRouter></React.StrictMode>);
