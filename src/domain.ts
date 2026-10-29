@@ -1,5 +1,5 @@
 export type Priority='low'|'medium'|'high'|'urgent';
-export interface Card {id:string;listId:string;title:string;description:string;priority:Priority;labels:string[];dueDate:string|null;completed:boolean;position:number;assignees?:string[];reminderAt?:string|null;checklist?:{id:string;text:string;done:boolean}[];comments?:{id:string;body:string;author:string;createdAt:string}[];customFields?:Record<string,string>;dependencies?:string[];attachments?:{id:string;name:string;path:string}[]}
+export interface Card {id:string;listId:string;title:string;description:string;priority:Priority;labels:string[];dueDate:string|null;completed:boolean;position:number;assignees?:string[];reminderAt?:string|null;checklist?:{id:string;text:string;done:boolean}[];comments?:{id:string;body:string;author:string;createdAt:string}[];customFields?:Record<string,string>;dependencies?:string[];attachments?:{id:string;name:string;path:string;mimeType?:string;signedUrl?:string}[]}
 export interface List {id:string;title:string;position:number;collapsed:boolean}
 export interface Board {id:string;title:string;description:string;background:string;favorite:boolean;workspaceId:string;updatedAt:string}
 export interface Workspace {id:string;name:string}
