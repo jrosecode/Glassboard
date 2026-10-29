@@ -14,6 +14,7 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
  async reorderCard(id:string,listId:string,position:number){await this.patchCard(id,{list_id:listId,position})}
  async toggleList(id:string,collapsed:boolean){const {error}=await this.db.from('lists').update({is_collapsed:collapsed}).eq('id',id);fail(error)}
  async toggleFavorite(id:string,value:boolean){const {error}=await this.db.from('boards').update({is_favorite:value}).eq('id',id);fail(error)}
+ async renameBoard(id:string,title:string){const {error}=await this.db.from('boards').update({title}).eq('id',id);fail(error)}
  async upload(cardId:string,file:File){const path=`${cardId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const {error}=await this.db.storage.from('attachments').upload(path,file);fail(error);const {data, error:insertError}=await this.db.from('attachments').insert({card_id:cardId,name:file.name,storage_path:path,size_bytes:file.size,mime_type:file.type}).select().single();fail(insertError);return data}
  subscribe(boardId:string,reload:()=>void){return this.db.channel(`board:${boardId}`).on('postgres_changes',{event:'*',schema:'public',table:'cards',filter:`board_id=eq.${boardId}`},reload).subscribe()}
 }
