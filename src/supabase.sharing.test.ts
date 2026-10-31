@@ -20,4 +20,20 @@ describe('SupabaseRepository board sharing',()=>{
       ['request_board_access',{p_token:'share-token'}],
     ]);
   });
+
+  it('sets labels through the authorized card-scoped RPC',async()=>{
+    const rpc=vi.fn().mockResolvedValue({data:null,error:null});
+    const repository=new SupabaseRepository({rpc} as never);
+
+    await repository.setCardLabels('card-1',[' urgent ','urgent','design']);
+
+    expect(rpc).toHaveBeenCalledWith('set_card_labels',{p_card_id:'card-1',p_names:['urgent','design']});
+  });
+
+  it('returns the structured board access result',async()=>{
+    const rpc=vi.fn().mockResolvedValue({data:{status:'accessible',boardId:'board-2'},error:null});
+    const repository=new SupabaseRepository({rpc} as never);
+
+    await expect(repository.requestBoardAccess('share-token')).resolves.toEqual({status:'accessible',boardId:'board-2'});
+  });
 });
