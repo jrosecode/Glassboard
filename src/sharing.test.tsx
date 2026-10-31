@@ -1,162 +1,133 @@
-import {render,screen,within} from '@testing-library/react';
+import {render,screen,within,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe,expect,it,vi} from 'vitest';
 import {App} from './App';
-import {ShareBoardModal} from './sharing';
+import {ShareBoardModal,type BoardSharing} from './sharing';
+
+const sharing:BoardSharing={
+  members:[{userId:'self',displayName:'Demo User',role:'owner',isSelf:true,accessSource:'workspace'}],
+  requests:[],shareUrl:null,canManage:true,
+};
+
+const board=(id:string,title:string)=>({id,workspaceId:'w1',title,description:'',background:'coast',favorite:false,updatedAt:''});
 
 describe('board sharing',()=>{
-  it('opens the Share board dialog from the board header',async()=>{
-    const user=userEvent.setup();
-    render(<App testMode/>);
-
-    await user.click(screen.getByRole('button',{name:'Share'}));
-
-    expect(screen.getByRole('dialog',{name:'Share board'})).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Email address')).toBeInTheDocument();
-    expect(screen.getByRole('combobox',{name:'Invite role'})).toHaveValue('member');
-  });
-
-  it('invites an existing user and shows them as a board member',async()=>{
-    const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
-    await user.type(screen.getByPlaceholderText('Email address'),'alex@glassboard.test');
-    await user.click(within(screen.getByRole('dialog',{name:'Share board'})).getByRole('button',{name:'Share'}));
-
-    expect(await screen.findByText('Alex Rivera')).toBeInTheDocument();
-    expect(screen.getByRole('tab',{name:'Board members 2'})).toBeInTheDocument();
-  });
-
-  it('directs unknown email addresses to a share link without creating pending invitations',async()=>{
+  it('offers secure links without an email or name invitation control',async()=>{
     const user=userEvent.setup();
     render(<App testMode/>);
     await user.click(screen.getByRole('button',{name:'Share'}));
     const dialog=screen.getByRole('dialog',{name:'Share board'});
-    await user.type(within(dialog).getByPlaceholderText('Email address'),'new.person@example.com');
-    await user.click(within(dialog).getByRole('button',{name:'Share'}));
-
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent('No registered user found. Use a share link instead.');
-    expect(within(dialog).queryByText('Pending invitation')).not.toBeInTheDocument();
-  });
-
-  it('creates a board share link that can be copied',async()=>{
-    const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-
     expect(within(dialog).getByText('Share this board with a link')).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('button',{name:'Create link'}));
-
-    expect(within(dialog).getByRole('button',{name:'Copy link'})).toBeInTheDocument();
-    expect(within(dialog).getByDisplayValue(/\?share=test-b1/)).toBeInTheDocument();
+    expect(within(dialog).queryByPlaceholderText(/email/i)).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('combobox',{name:/invite role/i})).not.toBeInTheDocument();
   });
 
-  it('approves a share-link join request into board membership',async()=>{
-    window.history.replaceState({},'', '/?share=test-request');
+  it('creates a board share link and clears stale errors after success',async()=>{
     const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
+    const repository={
+      boardSharing:vi.fn().mockRejectedValueOnce(new Error('temporary')).mockResolvedValue(sharing),
+      createBoardShareLink:vi.fn().mockResolvedValue('https://example.test/?share=token'),
+    };
+    const {rerender}=render(<ShareBoardModal boardId="board-1" repository={repository as never} onClose={()=>{}}/>);
+    expect(await screen.findByRole('alert')).toHaveTextContent('temporary');
+    rerender(<ShareBoardModal boardId="board-2" repository={repository as never} onClose={()=>{}}/>);
+    await screen.findByText('Demo User');
+    await user.click(screen.getByRole('button',{name:'Create link'}));
+    expect(await screen.findByDisplayValue(/share=token/)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('serializes modal mutations and disables controls while one is running',async()=>{
+    let resolve!: (value:string)=>void;
+    const pending=new Promise<string>(r=>{resolve=r});
+    const repository={boardSharing:vi.fn().mockResolvedValue(sharing),createBoardShareLink:vi.fn(()=>pending)};
+    const user=userEvent.setup();
+    render(<ShareBoardModal boardId="board-1" repository={repository as never} onClose={()=>{}}/>);
+    await screen.findByText('Demo User');
+    const create=screen.getByRole('button',{name:'Create link'});
+    await user.click(create);
+    expect(create).toBeDisabled();
+    await user.click(create);
+    expect(repository.createBoardShareLink).toHaveBeenCalledTimes(1);
+    resolve('https://example.test/?share=token');
+    expect(await screen.findByDisplayValue(/share=token/)).toBeInTheDocument();
+  });
+
+  it('hides self-removal while retaining controls for another board guest',async()=>{
+    const repository={boardSharing:async()=>({...sharing,members:[
+      {userId:'self',displayName:'Self Guest',role:'admin' as const,isSelf:true,accessSource:'board' as const},
+      {userId:'other',displayName:'Other Guest',role:'member' as const,isSelf:false,accessSource:'board' as const},
+    ]})};
+    render(<ShareBoardModal boardId="board-1" repository={repository as never} onClose={()=>{}}/>);
     const dialog=screen.getByRole('dialog',{name:'Share board'});
-    await user.click(within(dialog).getByRole('tab',{name:'Join requests 1'}));
+    expect(await within(dialog).findByText('Self Guest')).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button',{name:'Remove Self Guest'})).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('button',{name:'Remove Other Guest'})).toBeInTheDocument();
+  });
 
-    expect(within(dialog).getByText('Taylor Chen')).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('button',{name:'Approve Taylor Chen'}));
-
-    expect(within(dialog).getByRole('tab',{name:'Join requests 0'})).toBeInTheDocument();
-    expect(within(dialog).getByRole('tab',{name:'Board members 2'})).toBeInTheDocument();
+  it('renders Auth for a logged-out share URL and preserves its token',()=>{
+    window.history.replaceState({},'', '/?share=keep-me');
+    render(<App testMode authenticated={false} repository={{} as never}/>);
+    expect(screen.getByRole('heading',{name:'Welcome to Glassboard'})).toBeInTheDocument();
+    expect(window.location.search).toBe('?share=keep-me');
     window.history.replaceState({},'', '/');
   });
 
-  it('declines a share-link join request without adding a member',async()=>{
-    window.history.replaceState({},'', '/?share=test-request');
-    const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-    await user.click(within(dialog).getByRole('tab',{name:'Join requests 1'}));
-    await user.click(within(dialog).getByRole('button',{name:'Decline Taylor Chen'}));
-
-    expect(within(dialog).getByRole('tab',{name:'Join requests 0'})).toBeInTheDocument();
-    expect(within(dialog).getByRole('tab',{name:'Board members 1'})).toBeInTheDocument();
-    window.history.replaceState({},'', '/');
-  });
-
-  it('changes a board member role',async()=>{
-    const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-    await user.type(within(dialog).getByPlaceholderText('Email address'),'alex@glassboard.test');
-    await user.click(within(dialog).getByRole('button',{name:'Share'}));
-
-    await user.selectOptions(within(dialog).getByRole('combobox',{name:'Role for Alex Rivera'}),'admin');
-    expect(within(dialog).getByRole('combobox',{name:'Role for Alex Rivera'})).toHaveValue('admin');
-  });
-
-  it('removes a board member',async()=>{
-    const user=userEvent.setup();
-    render(<App testMode/>);
-    await user.click(screen.getByRole('button',{name:'Share'}));
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-    await user.type(within(dialog).getByPlaceholderText('Email address'),'alex@glassboard.test');
-    await user.click(within(dialog).getByRole('button',{name:'Share'}));
-    await user.click(within(dialog).getByRole('button',{name:'Remove Alex Rivera'}));
-
-    expect(within(dialog).queryByText('Alex Rivera')).not.toBeInTheDocument();
-    expect(within(dialog).getByRole('tab',{name:'Board members 1'})).toBeInTheDocument();
-  });
-
-  it('hides board management actions from regular members',async()=>{
-    const repository={boardSharing:async()=>({members:[{userId:'self',displayName:'Regular Member',role:'member' as const,isSelf:true}],invites:[],requests:[],shareUrl:null,canManage:false})};
-    render(<ShareBoardModal boardId="board-1" repository={repository as never} onClose={()=>{}}/>);
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-    expect(await within(dialog).findByText('Regular Member')).toBeInTheDocument();
-    expect(within(dialog).queryByPlaceholderText('Email address')).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole('button',{name:'Create link'})).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole('combobox',{name:'Role for Regular Member'})).not.toBeInTheDocument();
-  });
-
-  it('shows workspace-derived members without board role or removal controls',async()=>{
-    const repository={boardSharing:async()=>({members:[
-      {userId:'owner',displayName:'Workspace Owner',role:'owner' as const,isSelf:false,accessSource:'workspace' as const},
-      {userId:'member',displayName:'Workspace Member',role:'member' as const,isSelf:false,accessSource:'workspace' as const},
-      {userId:'guest',displayName:'Board Guest',role:'member' as const,isSelf:false,accessSource:'board' as const},
-    ],invites:[],requests:[],shareUrl:null,canManage:true})};
-    render(<ShareBoardModal boardId="board-1" repository={repository as never} onClose={()=>{}}/>);
-    const dialog=screen.getByRole('dialog',{name:'Share board'});
-
-    expect(await within(dialog).findByText('Workspace Member')).toBeInTheDocument();
-    expect(within(dialog).queryByRole('combobox',{name:'Role for Workspace Member'})).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole('button',{name:'Remove Workspace Member'})).not.toBeInTheDocument();
-    expect(within(dialog).getByRole('combobox',{name:'Role for Board Guest'})).toBeInTheDocument();
-  });
-
-  it('shows a pending-access screen instead of seed data after requesting access',async()=>{
-    window.history.replaceState({},'', '/?share=test-request');
-    const repository={requestBoardAccess:vi.fn().mockResolvedValue({status:'requested',boardId:'board-2'})};
+  it('scrubs an invalid token and shows an error without seed data',async()=>{
+    window.history.replaceState({},'', '/?share=invalid');
+    const repository={requestBoardAccess:vi.fn().mockRejectedValue(new Error('Share link is invalid or expired'))};
     render(<App testMode repository={repository as never}/>);
-    expect(await screen.findByRole('heading',{name:'Access request pending'})).toBeInTheDocument();
+    expect(await screen.findByRole('heading',{name:'Unable to open board'})).toBeInTheDocument();
+    expect(screen.getByText('Share link is invalid or expired')).toBeInTheDocument();
     expect(screen.queryByRole('heading',{name:'Website Launch'})).not.toBeInTheDocument();
     expect(window.location.search).toBe('');
     window.history.replaceState({},'', '/');
   });
 
-  it('loads the linked board for a member who already has access',async()=>{
-    window.history.replaceState({},'', '/?share=test-accessible');
+  it('scrubs the token and shows an error when linked-board loading fails',async()=>{
+    window.history.replaceState({},'', '/?share=token');
     const repository={
       requestBoardAccess:vi.fn().mockResolvedValue({status:'accessible',boardId:'board-2'}),
-      boards:vi.fn().mockResolvedValue([
-        {id:'board-1',workspaceId:'w1',title:'Wrong board',description:'',background:'coast',favorite:false,updatedAt:''},
-        {id:'board-2',workspaceId:'w1',title:'Linked board',description:'',background:'coast',favorite:false,updatedAt:''},
-      ]),
-      lists:vi.fn().mockResolvedValue([]),cards:vi.fn().mockResolvedValue([]),
+      boards:vi.fn().mockRejectedValue(new Error('Board load failed')),
     };
     render(<App testMode repository={repository as never}/>);
-    expect(await screen.findByRole('heading',{name:'Linked board'})).toBeInTheDocument();
-    expect(repository.lists).toHaveBeenCalledWith('board-2');
-    expect(repository.cards).toHaveBeenCalledWith('board-2');
+    expect(await screen.findByRole('heading',{name:'Unable to open board'})).toBeInTheDocument();
+    expect(screen.queryByRole('heading',{name:'Website Launch'})).not.toBeInTheDocument();
     expect(window.location.search).toBe('');
+    window.history.replaceState({},'', '/');
+  });
+
+  it('keeps the target board pending and Check access loads exactly that board',async()=>{
+    window.history.replaceState({},'', '/?share=request-token');
+    const repository={
+      requestBoardAccess:vi.fn().mockResolvedValue({status:'requested',boardId:'board-2'}),
+      boards:vi.fn().mockResolvedValueOnce([board('board-1','Wrong board')]).mockResolvedValueOnce([board('board-1','Wrong board'),board('board-2','Linked board')]),
+      lists:vi.fn().mockResolvedValue([]),cards:vi.fn().mockResolvedValue([]),boardSharing:vi.fn().mockResolvedValue({...sharing,canManage:false}),
+    };
+    const user=userEvent.setup();
+    render(<App testMode repository={repository as never}/>);
+    expect(await screen.findByRole('heading',{name:'Access request pending'})).toBeInTheDocument();
+    await user.click(screen.getByRole('button',{name:'Check access'}));
+    expect(screen.getByRole('heading',{name:'Access request pending'})).toBeInTheDocument();
+    await user.click(screen.getByRole('button',{name:'Check access'}));
+    expect(await screen.findByRole('heading',{name:'Linked board'})).toBeInTheDocument();
+    expect(repository.lists).toHaveBeenLastCalledWith('board-2');
+    expect(repository.cards).toHaveBeenLastCalledWith('board-2');
+    window.history.replaceState({},'', '/');
+  });
+
+  it('hides rename and favorite without metadata permission',async()=>{
+    window.history.replaceState({},'', '/?share=token');
+    const repository={
+      requestBoardAccess:vi.fn().mockResolvedValue({status:'accessible',boardId:'board-2'}),
+      boards:vi.fn().mockResolvedValue([board('board-2','Guest board')]),lists:vi.fn().mockResolvedValue([]),cards:vi.fn().mockResolvedValue([]),
+      boardSharing:vi.fn().mockResolvedValue({...sharing,canManage:false}),
+    };
+    render(<App testMode repository={repository as never}/>);
+    expect(await screen.findByRole('heading',{name:'Guest board'})).toBeInTheDocument();
+    await waitFor(()=>expect(repository.boardSharing).toHaveBeenCalledWith('board-2'));
+    expect(screen.queryByRole('button',{name:'Rename board'})).not.toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:'Favorite board'})).not.toBeInTheDocument();
     window.history.replaceState({},'', '/');
   });
 });

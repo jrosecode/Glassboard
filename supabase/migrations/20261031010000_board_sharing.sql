@@ -128,40 +128,27 @@ begin
   return result;
 end$$;
 
-create or replace function public.invite_board_member(p_board_id uuid,p_identity text,p_role public.board_role default 'member') returns jsonb
-language plpgsql security definer set search_path=''
-as $$
-declare target uuid; normalized text:=lower(trim(p_identity));
-begin
-  if not public.can_manage_board(p_board_id) then raise exception 'Board management denied' using errcode='42501'; end if;
-  if normalized !~ '^[^@[:space:]]+@[^@[:space:]]+$' then raise exception 'Enter an exact email address'; end if;
-  select u.id into target from auth.users u where lower(u.email)=normalized limit 1;
-  if target is null then raise exception 'No registered user found. Use a share link instead.'; end if;
-  if exists(
-    select 1 from public.boards b
-    join public.workspace_members wm on wm.workspace_id=b.workspace_id
-    where b.id=p_board_id and wm.user_id=target
-  ) then return public.get_board_sharing(p_board_id); end if;
-  insert into public.board_members(board_id,user_id,role) values(p_board_id,target,p_role)
-  on conflict(board_id,user_id) do update set role=excluded.role;
-  return public.get_board_sharing(p_board_id);
-end$$;
-
 create or replace function public.create_board_share_link(p_board_id uuid) returns text
 language plpgsql security definer set search_path=''
-as $$declare raw_token text:=encode(gen_random_bytes(32),'hex');begin
+as $$declare raw_token text:=encode(extensions.gen_random_bytes(32),'hex');begin
   if not public.can_manage_board(p_board_id) then raise exception 'Board management denied' using errcode='42501'; end if;
-  update public.board_share_links set revoked_at=now() where board_id=p_board_id and revoked_at is null;
-  insert into public.board_share_links(board_id,token_hash,created_by) values(p_board_id,digest(raw_token,'sha256'),auth.uid());
+  with revoked as (
+    update public.board_share_links set revoked_at=now()
+    where board_id=p_board_id and revoked_at is null
+    returning id
+  )
+  delete from public.board_join_requests where share_link_id in (select id from revoked);
+  insert into public.board_share_links(board_id,token_hash,created_by) values(p_board_id,extensions.digest(raw_token,'sha256'),auth.uid());
   return raw_token;
 end$$;
 
 create or replace function public.request_board_access(p_token text) returns jsonb
 language plpgsql security definer set search_path=''
 as $$declare link public.board_share_links;begin
-  select * into link from public.board_share_links where token_hash=digest(p_token,'sha256') and revoked_at is null;
+  select * into link from public.board_share_links where token_hash=extensions.digest(p_token,'sha256') and revoked_at is null;
   if link.id is null then raise exception 'Share link is invalid or expired'; end if;
   if public.can_access_board(link.board_id) then
+    delete from public.board_join_requests where board_id=link.board_id and user_id=auth.uid();
     return jsonb_build_object('status','accessible','boardId',link.board_id);
   end if;
   insert into public.board_join_requests(board_id,user_id,share_link_id) values(link.board_id,auth.uid(),link.id)
@@ -173,9 +160,18 @@ create or replace function public.resolve_board_join_request(p_board_id uuid,p_r
 language plpgsql security definer set search_path=''
 as $$declare target uuid;begin
   if not public.can_manage_board(p_board_id) then raise exception 'Board management denied' using errcode='42501'; end if;
-  delete from public.board_join_requests where id=p_request_id and board_id=p_board_id returning user_id into target;
-  if target is null then raise exception 'Join request not found'; end if;
-  if p_approve then
+  delete from public.board_join_requests r
+  using public.board_share_links l
+  where r.id=p_request_id and r.board_id=p_board_id and l.id=r.share_link_id and l.revoked_at is null
+  returning r.user_id into target;
+  if target is null then raise exception 'Join request not found or share link revoked'; end if;
+  if p_approve and not exists(
+    select 1 from public.boards b
+    join public.workspace_members wm on wm.workspace_id=b.workspace_id
+    where b.id=p_board_id and wm.user_id=target
+    union all
+    select 1 from public.board_members bm where bm.board_id=p_board_id and bm.user_id=target
+  ) then
     insert into public.board_members(board_id,user_id,role) values(p_board_id,target,p_role)
     on conflict(board_id,user_id) do update set role=excluded.role;
   end if;
@@ -186,6 +182,7 @@ create or replace function public.update_board_member(p_board_id uuid,p_user_id 
 language plpgsql security definer set search_path=''
 as $$begin
   if not public.can_manage_board(p_board_id) then raise exception 'Board management denied' using errcode='42501'; end if;
+  if p_role is null and p_user_id=auth.uid() then raise exception 'Cannot remove your own board access'; end if;
   if exists(
     select 1 from public.boards b
     join public.workspace_members wm on wm.workspace_id=b.workspace_id
@@ -199,11 +196,24 @@ as $$begin
   return public.get_board_sharing(p_board_id);
 end$$;
 
+create or replace function public.update_board_metadata(p_board_id uuid,p_title text default null,p_is_favorite boolean default null) returns void
+language plpgsql security definer set search_path=''
+as $$begin
+  if not public.can_manage_board(p_board_id) then raise exception 'Board management denied' using errcode='42501'; end if;
+  if p_title is not null and (trim(p_title)='' or length(trim(p_title))>200) then raise exception 'Board title must be between 1 and 200 characters'; end if;
+  update public.boards
+  set title=coalesce(trim(p_title),title),is_favorite=coalesce(p_is_favorite,is_favorite)
+  where id=p_board_id;
+  if not found then raise exception 'Board not found'; end if;
+end$$;
+
 create or replace function public.set_card_labels(p_card_id uuid,p_names text[]) returns void
 language plpgsql security definer set search_path=''
 as $$
 declare target_board uuid; target_workspace uuid;
 begin
+  if coalesce(array_length(p_names,1),0)>20 then raise exception 'A card can have at most 20 labels'; end if;
+  if exists(select 1 from unnest(coalesce(p_names,array[]::text[])) name where length(trim(name))>50) then raise exception 'Labels can have at most 50 characters'; end if;
   select c.board_id,b.workspace_id into target_board,target_workspace
   from public.cards c join public.boards b on b.id=c.board_id
   where c.id=p_card_id;
@@ -230,18 +240,18 @@ language plpgsql as $$begin
 end$$;
 
 revoke all on function public.get_board_sharing(uuid) from public;
-revoke all on function public.invite_board_member(uuid,text,public.board_role) from public;
 revoke all on function public.create_board_share_link(uuid) from public;
 revoke all on function public.request_board_access(text) from public;
 revoke all on function public.resolve_board_join_request(uuid,uuid,boolean,public.board_role) from public;
 revoke all on function public.update_board_member(uuid,uuid,public.board_role) from public;
+revoke all on function public.update_board_metadata(uuid,text,boolean) from public;
 revoke all on function public.set_card_labels(uuid,text[]) from public;
 grant execute on function public.get_board_sharing(uuid) to authenticated;
-grant execute on function public.invite_board_member(uuid,text,public.board_role) to authenticated;
 grant execute on function public.create_board_share_link(uuid) to authenticated;
 grant execute on function public.request_board_access(text) to authenticated;
 grant execute on function public.resolve_board_join_request(uuid,uuid,boolean,public.board_role) to authenticated;
 grant execute on function public.update_board_member(uuid,uuid,public.board_role) to authenticated;
+grant execute on function public.update_board_metadata(uuid,text,boolean) to authenticated;
 grant execute on function public.set_card_labels(uuid,text[]) to authenticated;
 
 commit;
