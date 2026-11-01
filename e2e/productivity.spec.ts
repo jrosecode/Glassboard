@@ -1,0 +1,9 @@
+import {test,expect} from '@playwright/test';
+import {mkdirSync} from 'node:fs';
+import {join} from 'node:path';
+const artifacts=process.env.GLASSBOARD_SCREENSHOTS??'/Users/jeremiasrosa/.hermes/cache/scratch/glassboard-screenshots';
+mkdirSync(artifacts,{recursive:true});
+
+test('desktop productivity flow and singleton AI list',async({page})=>{await page.setViewportSize({width:1440,height:900});await page.goto('/?test=1');await page.getByRole('button',{name:/send define launch narrative to ai/i}).click();await expect(page.getByTestId('board-ai-list')).toHaveCount(1);await page.getByRole('button',{name:'Productivity workspace'}).click();await page.getByRole('button',{name:'My Work'}).click();await expect(page.getByRole('heading',{name:'My Work'})).toBeVisible();await page.screenshot({path:join(artifacts,'productivity-desktop.png'),fullPage:true});});
+
+test('mobile My Day has no viewport overflow',async({page})=>{await page.setViewportSize({width:375,height:812});await page.goto('/?test=1');await page.getByRole('button',{name:'Open navigation menu'}).click();await page.getByRole('button',{name:'Open productivity workspace'}).click();await page.getByRole('button',{name:'My Day'}).click();await expect(page.getByRole('button',{name:/export calendar/i})).toBeVisible();const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);expect(overflow).toBe(false);await page.screenshot({path:join(artifacts,'productivity-mobile.png'),fullPage:true});});

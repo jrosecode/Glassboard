@@ -1,6 +1,8 @@
 export type Priority='low'|'medium'|'high'|'urgent';
-export interface Card {id:string;listId:string;title:string;description:string;priority:Priority;labels:string[];dueDate:string|null;completed:boolean;position:number;assignees?:string[];reminderAt?:string|null;checklist?:{id:string;text:string;done:boolean}[];comments?:{id:string;body:string;author:string;createdAt:string}[];customFields?:Record<string,string>;dependencies?:string[];attachments?:{id:string;name:string;path:string;mimeType?:string;signedUrl?:string}[]}
-export interface List {id:string;title:string;position:number;collapsed:boolean}
+export type AgentStatus='queued'|'running'|'awaiting_approval'|'blocked'|'completed'|'failed'|'cancelled';
+export interface AgentRun {id:string;status:AgentStatus;result?:string;error?:string;requiresApproval?:boolean}
+export interface Card {id:string;boardId?:string;listId:string;title:string;description:string;priority:Priority;labels:string[];dueDate:string|null;completed:boolean;position:number;assignees?:string[];reminderAt?:string|null;checklist?:{id:string;text:string;done:boolean}[];comments?:{id:string;body:string;author:string;createdAt:string}[];customFields?:Record<string,string>;dependencies?:string[];attachments?:{id:string;name:string;path:string;mimeType?:string;signedUrl?:string}[];parentId?:string|null;taskType?:'task'|'project'|'subtask'|'milestone';blockedReason?:string|null;acceptanceCriteria?:string;effort?:number|null;source?:'manual'|'voice'|'ai'|'recurring';completedAt?:string|null;approvalStatus?:'pending'|'approved'|'rejected'|null;agentRun?:AgentRun|null;recurrence?:'daily'|'weekly'|'monthly'|null;updatedAt?:string}
+export interface List {id:string;title:string;position:number;collapsed:boolean;boardId?:string;kind?:'normal'|'ai'}
 export interface Board {id:string;title:string;description:string;background:string;favorite:boolean;workspaceId:string;updatedAt:string}
 export interface Workspace {id:string;name:string}
 export type View='board'|'table'|'calendar'|'timeline'|'dashboard';
