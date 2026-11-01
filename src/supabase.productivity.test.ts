@@ -16,6 +16,12 @@ describe('productivity repository boundary',()=>{
 });
 
 describe('board list repository boundary',()=>{
+ it('ensures a default board through the scoped RPC',async()=>{
+  const rpc=vi.fn().mockResolvedValue({data:{id:'board',workspace_id:'workspace',title:'My board',description:'',background:'coast',is_favorite:false,updated_at:'2026-11-01'},error:null});
+  const repo=new SupabaseRepository({rpc} as never);
+  expect(await repo.ensureDefaultBoard()).toMatchObject({id:'board',workspaceId:'workspace',title:'My board'});
+  expect(rpc).toHaveBeenCalledWith('ensure_default_board');
+ });
  it('creates normal lists through the scoped RPC',async()=>{
   const rpc=vi.fn().mockResolvedValue({data:{id:'list',board_id:'board',title:'Backlog',position:3,is_collapsed:false,kind:'normal'},error:null});
   const repo=new SupabaseRepository({rpc} as never);
