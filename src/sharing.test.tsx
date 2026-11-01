@@ -47,6 +47,7 @@ describe('board sharing',()=>{
     const create=screen.getByRole('button',{name:'Create link'});
     await user.click(create);
     expect(create).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Saving changes');
     await user.click(create);
     expect(repository.createBoardShareLink).toHaveBeenCalledTimes(1);
     resolve('https://example.test/?share=token');

@@ -53,6 +53,7 @@ export function ShareBoardModal({boardId='b1',repository,testMode=false,onClose}
 
   return <GlassModal title="Share board" onClose={onClose}>
     <div className="share-dialog" aria-busy={busy}>
+      {busy&&<p role="status">{sharing.members.length?'Saving changes…':'Loading sharing…'}</p>}
       {error&&<p className="error" role="alert">{error}</p>}
       {sharing.canManage&&<section className="share-link">
         <h3>Share this board with a link</h3>
