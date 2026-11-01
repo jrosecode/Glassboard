@@ -1,4 +1,4 @@
-import {render,screen,within,waitFor} from '@testing-library/react'; import userEvent from '@testing-library/user-event'; import {describe,it,expect,vi,afterEach} from 'vitest'; import {App,Auth} from './App';
+import {act,render,screen,within,waitFor} from '@testing-library/react'; import userEvent from '@testing-library/user-event'; import {describe,it,expect,vi,afterEach} from 'vitest'; import {App,Auth} from './App';
 afterEach(()=>window.history.replaceState({},'','/'));
 describe('Glassboard',()=>{it('opens card deep links through productivity on startup',async()=>{window.history.replaceState({},'','/?card=c1');render(<App testMode/>);expect(await screen.findByRole('region',{name:'Productivity workspace'})).toBeInTheDocument();expect(await screen.findByRole('dialog',{name:'Define launch narrative details'})).toBeInTheDocument()});it('opens planning deep links through productivity on startup',async()=>{window.history.replaceState({},'','/?planning=p1');render(<App testMode/>);expect(await screen.findByRole('heading',{name:'Planning'})).toBeInTheDocument()});it('opens the integrated productivity workspace',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByRole('button',{name:/productivity workspace/i}));expect(screen.getByRole('region',{name:'Productivity workspace'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'My Work'})).toBeInTheDocument()});it('assigns and reassigns cards from the detail dialog',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByText('Define launch narrative'));const assignee=screen.getByRole('checkbox',{name:'Demo User'});expect(assignee).not.toBeChecked();await user.click(assignee);expect(assignee).toBeChecked()});it('keeps ordinary board cards minimal and details in the dialog',async()=>{const user=userEvent.setup();render(<App testMode/>);expect(screen.queryByText('Shape the story and proof points for launch.')).not.toBeInTheDocument();expect(document.querySelector('.task-card .priority')).toBeNull();await user.click(screen.getByText('Define launch narrative'));expect(screen.getByRole('dialog',{name:/define launch narrative/i})).toHaveTextContent('Description')});it('queues a board card into exactly one AI list',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByRole('button',{name:/send define launch narrative to ai/i}));expect(screen.getAllByTestId('board-ai-list')).toHaveLength(1);expect(screen.getByText('Queued')).toBeInTheDocument();});it('offers the AI queue action inside card details',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByText('Define launch narrative'));const dialog=screen.getByRole('dialog',{name:/define launch narrative/i});expect(dialog).toBeInTheDocument();await user.click(within(dialog).getByRole('button',{name:/send define launch narrative to ai/i}));expect(screen.getAllByTestId('board-ai-list')).toHaveLength(1);expect(screen.getByText('Queued')).toBeInTheDocument();});it('shows actionable setup when Supabase is not configured',()=>{render(<App/>);expect(screen.getByRole('heading',{name:/connect supabase/i})).toBeInTheDocument();expect(screen.getByText(/vite_supabase_url/i)).toBeInTheDocument();});it('supports board work in the explicit test adapter',async()=>{const user=userEvent.setup();render(<App testMode/>);expect(screen.getByRole('heading',{name:'Website Launch'})).toBeInTheDocument();await user.click(screen.getAllByRole('button',{name:/add card/i})[0]);await user.type(screen.getByLabelText(/card title/i),'Ship release');await user.click(screen.getByRole('button',{name:/create card/i}));expect(screen.getByText('Ship release')).toBeInTheDocument();await user.click(screen.getByText('Ship release'));expect(screen.getByRole('dialog',{name:/ship release/i})).toBeInTheDocument();});it('switches to dashboard analytics',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByRole('button',{name:/open navigation menu/i}));await user.click(screen.getByRole('button',{name:/dashboard view/i}));expect(await screen.findByText(/completion rate/i)).toBeInTheDocument();});it('offers sign up and creates an account with email and password',async()=>{const user=userEvent.setup();const signUp=vi.fn().mockResolvedValue({error:null});const signInWithPassword=vi.fn().mockResolvedValue({error:null});render(<Auth authClient={{signUp,signInWithPassword} as never}/>);await user.click(screen.getByRole('button',{name:/sign up/i}));await user.type(screen.getByLabelText(/^email$/i),'ios@example.com');await user.type(screen.getByLabelText(/^password$/i),'correct-horse-battery');await user.click(screen.getByRole('button',{name:/create account/i}));expect(signUp).toHaveBeenCalledWith({email:'ios@example.com',password:'correct-horse-battery'});});it('opens every add-card form with a blank title',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getAllByRole('button',{name:/add card/i})[0]);await user.type(screen.getByLabelText(/card title/i),'Old title');await user.click(screen.getByRole('button',{name:/cancel/i}));await user.click(screen.getAllByRole('button',{name:/add card/i})[1]);expect(screen.getByLabelText(/card title/i)).toHaveValue('');});it('uses a compact grid menu and inline editable board title',async()=>{const user=userEvent.setup();render(<App testMode/>);expect(screen.queryByRole('complementary')).not.toBeInTheDocument();await user.click(screen.getByRole('button',{name:/open navigation menu/i}));expect(screen.getByRole('menu')).toBeInTheDocument();await user.click(screen.getByRole('button',{name:/rename board/i}));const title=screen.getByLabelText(/board name/i);expect(title).toHaveValue('Website Launch');await user.clear(title);await user.type(title,'Compact Board{enter}');expect(screen.getByRole('button',{name:/rename board/i})).toHaveTextContent('Compact Board');});it('shows only selected labels and attaches a picture',async()=>{const user=userEvent.setup();render(<App testMode/>);expect(screen.queryByText('Inspection')).not.toBeInTheDocument();await user.click(screen.getByText('Define launch narrative'));const labels=screen.getByLabelText(/^labels$/i);await user.type(labels,'Inspection');expect(labels).toHaveValue('Inspection');const picture=new File(['image'],'unit.jpg',{type:'image/jpeg'});await user.upload(screen.getByLabelText(/attach file/i),picture);expect((await screen.findAllByRole('img',{name:'unit.jpg'})).length).toBe(1);const pdf=new File(['pdf'],'inspection.pdf',{type:'application/pdf'});await user.upload(screen.getByLabelText(/attach file/i),pdf);expect(await screen.findByRole('link',{name:/inspection.pdf/i})).toBeInTheDocument();});it('marks a card done from its hover completion control',async()=>{const user=userEvent.setup();render(<App testMode/>);await user.click(screen.getByRole('button',{name:/mark define launch narrative done/i}));expect(screen.getByRole('button',{name:/mark define launch narrative not done/i})).toBeInTheDocument();});it('edits a list name from its draggable header',async()=>{const user=userEvent.setup();render(<App testMode/>);expect(screen.getByRole('button',{name:/reorder ideas/i})).toBeInTheDocument();await user.click(screen.getByRole('button',{name:/edit ideas/i}));const input=screen.getByLabelText(/list name/i);await user.clear(input);await user.type(input,'Inspections{enter}');expect(screen.getByRole('heading',{name:'Inspections'})).toBeInTheDocument();});});
 const productionRepository=(overrides:Record<string,unknown>={})=>({boards:vi.fn().mockResolvedValue([{id:'b1',workspaceId:'w1',title:'Website Launch',description:'',background:'coast',favorite:true,updatedAt:'2026-11-01'}]),lists:vi.fn().mockResolvedValue([{id:'ideas',title:'Ideas',position:1,collapsed:false,kind:'normal'}]),cards:vi.fn().mockResolvedValue([{id:'c1',listId:'ideas',title:'Define launch narrative',description:'',priority:'high',labels:[],dueDate:'2026-11-30',completed:false,position:1,recurrence:'monthly',recurrenceNextAt:'2026-11-30T09:00:00Z'}]),boardSharing:vi.fn().mockResolvedValue({canManage:true,members:[],requests:[],shareUrl:null}),notificationPreferences:vi.fn().mockResolvedValue({inApp:true,email:false,dueReminders:true,agentUpdates:true}),patchCard:vi.fn().mockResolvedValue(undefined),createCard:vi.fn().mockResolvedValue({id:'created'}),deleteCard:vi.fn().mockResolvedValue(undefined),renameBoard:vi.fn().mockResolvedValue(undefined),renameList:vi.fn().mockResolvedValue(undefined),toggleFavorite:vi.fn().mockResolvedValue(undefined),toggleList:vi.fn().mockResolvedValue(undefined),reorderCard:vi.fn().mockResolvedValue(undefined),reorderList:vi.fn().mockResolvedValue(undefined),setCardLabels:vi.fn().mockResolvedValue(undefined),setCardDependencies:vi.fn().mockResolvedValue(undefined),setCardAssignees:vi.fn().mockResolvedValue(undefined),upsertReminder:vi.fn().mockResolvedValue(undefined),upsertRecurringRule:vi.fn().mockResolvedValue(undefined),queueCardForAi:vi.fn().mockResolvedValue({listId:'ai',runId:'run',status:'queued'}),controlAgentRun:vi.fn().mockResolvedValue('cancelled'),addComment:vi.fn().mockResolvedValue(undefined),...overrides});
@@ -14,3 +14,70 @@ describe('repository loading and recovery',()=>{
 });
 
 describe('authentication mutations',()=>{it('shows pending progress and a rejected request error',async()=>{let rejectLogin!:(reason?:unknown)=>void;const pending=new Promise<{error:{message:string}|null}>((_resolve,reject)=>{rejectLogin=reject});const authClient={signInWithPassword:vi.fn().mockReturnValue(pending),signUp:vi.fn()};render(<Auth authClient={authClient as never}/>);const user=userEvent.setup();await user.type(screen.getByLabelText('Email'),'user@example.com');await user.type(screen.getByLabelText('Password'),'password1');await user.click(within(screen.getByLabelText('Password').closest('form')!).getByRole('button',{name:'Log in'}));expect(screen.getByRole('button',{name:'Signing in…'})).toBeDisabled();expect(screen.getByRole('status')).toHaveTextContent('Signing in');rejectLogin(new Error('Network unavailable'));expect(await screen.findByRole('alert')).toHaveTextContent('Network unavailable')})});
+
+describe('board list creation',()=>{
+ it('starts with blank normal and AI lists and creates another list',async()=>{
+  const initialLists=[
+   {id:'starter',title:'New list',position:1,collapsed:false,kind:'normal'},
+   {id:'ai',title:'AI',position:2,collapsed:false,kind:'ai'},
+  ];
+  const createList=vi.fn().mockResolvedValue({id:'backlog',boardId:'b1',title:'Backlog',position:3,collapsed:false,kind:'normal'});
+  const repository=productionRepository({lists:vi.fn().mockResolvedValue(initialLists),cards:vi.fn().mockResolvedValue([]),createList});
+  render(<App repository={repository as never}/>);
+  expect(await screen.findByRole('heading',{name:'New list'})).toBeInTheDocument();
+  const aiList=screen.getByTestId('board-ai-list');
+  expect(within(aiList).getByRole('heading',{name:'AI'})).toBeInTheDocument();
+  expect(within(aiList).queryByRole('button',{name:'Add card'})).not.toBeInTheDocument();
+  const user=userEvent.setup();
+  await user.click(screen.getByRole('button',{name:'Add list'}));
+  await user.type(screen.getByLabelText('List name'),'Backlog');
+  await user.click(screen.getByRole('button',{name:'Create list'}));
+  expect(createList).toHaveBeenCalledWith('b1','Backlog');
+  expect(await screen.findByRole('heading',{name:'Backlog'})).toBeInTheDocument();
+ });
+
+ it('does not append a completed list creation after switching boards',async()=>{
+  let resolveCreate!:(list:{id:string;boardId:string;title:string;position:number;collapsed:boolean;kind:'normal'})=>void;
+  const createList=vi.fn().mockReturnValue(new Promise(resolve=>{resolveCreate=resolve}));
+  const boards=[
+   {id:'b1',workspaceId:'w1',title:'Website Launch',description:'',background:'coast',favorite:true,updatedAt:'2026-11-01'},
+   {id:'b2',workspaceId:'w1',title:'Board Two',description:'',background:'coast',favorite:false,updatedAt:'2026-10-31'},
+  ];
+  const lists=vi.fn(async(boardId:string)=>boardId==='b2'?[{id:'b2-list',boardId:'b2',title:'Board Two List',position:1,collapsed:false,kind:'normal'}]:[{id:'b1-list',boardId:'b1',title:'Board One List',position:1,collapsed:false,kind:'normal'}]);
+  const repository=productionRepository({boards:vi.fn().mockResolvedValue(boards),lists,cards:vi.fn().mockResolvedValue([]),createList});
+  render(<App repository={repository as never}/>);
+  const user=userEvent.setup();
+  await screen.findByRole('heading',{name:'Board One List'});
+  await user.click(screen.getByRole('button',{name:'Add list'}));
+  await user.type(screen.getByLabelText('List name'),'Backlog');
+  await user.click(screen.getByRole('button',{name:'Create list'}));
+  expect(createList).toHaveBeenCalledWith('b1','Backlog');
+  await user.selectOptions(screen.getByRole('combobox',{name:'Switch board'}),'b2');
+  expect(await screen.findByRole('heading',{name:'Board Two List'})).toBeInTheDocument();
+  await act(async()=>{resolveCreate({id:'late-list',boardId:'b1',title:'Backlog',position:2,collapsed:false,kind:'normal'});await Promise.resolve()});
+  expect(screen.queryByRole('heading',{name:'Backlog'})).not.toBeInTheDocument();
+  expect(screen.getByRole('heading',{name:'Board Two List'})).toBeInTheDocument();
+ });
+
+ it('does not restore an old board when list creation fails after switching boards',async()=>{
+  let rejectCreate!:(reason:Error)=>void;
+  const createList=vi.fn().mockReturnValue(new Promise((_resolve,reject)=>{rejectCreate=reject}));
+  const boards=[
+   {id:'b1',workspaceId:'w1',title:'Website Launch',description:'',background:'coast',favorite:true,updatedAt:'2026-11-01'},
+   {id:'b2',workspaceId:'w1',title:'Board Two',description:'',background:'coast',favorite:false,updatedAt:'2026-10-31'},
+  ];
+  const lists=vi.fn(async(boardId:string)=>boardId==='b2'?[{id:'b2-list',boardId:'b2',title:'Board Two List',position:1,collapsed:false,kind:'normal'}]:[{id:'b1-list',boardId:'b1',title:'Board One List',position:1,collapsed:false,kind:'normal'}]);
+  const repository=productionRepository({boards:vi.fn().mockResolvedValue(boards),lists,cards:vi.fn().mockResolvedValue([]),createList});
+  render(<App repository={repository as never}/>);
+  const user=userEvent.setup();
+  await screen.findByRole('heading',{name:'Board One List'});
+  await user.click(screen.getByRole('button',{name:'Add list'}));
+  await user.type(screen.getByLabelText('List name'),'Backlog');
+  await user.click(screen.getByRole('button',{name:'Create list'}));
+  await user.selectOptions(screen.getByRole('combobox',{name:'Switch board'}),'b2');
+  expect(await screen.findByRole('heading',{name:'Board Two List'})).toBeInTheDocument();
+  await act(async()=>{rejectCreate(new Error('Create failed'));await Promise.resolve()});
+  expect(screen.getByRole('heading',{name:'Board Two List'})).toBeInTheDocument();
+  expect(screen.queryByRole('heading',{name:'Board One List'})).not.toBeInTheDocument();
+ });
+});
