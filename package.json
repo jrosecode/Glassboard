@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "worker:productivity": "node scripts/productivity-worker.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
