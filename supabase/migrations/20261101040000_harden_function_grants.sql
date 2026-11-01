@@ -1,0 +1,72 @@
+begin;
+
+revoke all on function public.capture_card_activity() from public,anon,authenticated;
+revoke all on function public.enforce_ai_list_entry() from public,anon,authenticated;
+revoke all on function public.enforce_ai_list_kind() from public,anon,authenticated;
+revoke all on function public.validate_card_dependency() from public,anon,authenticated;
+revoke all on function public.validate_card_hierarchy() from public,anon,authenticated;
+revoke all on function public.validate_card_checklist() from public,anon,authenticated;
+revoke all on function public.validate_card_board_change() from public,anon,authenticated;
+revoke all on function public.validate_list_board_change() from public,anon,authenticated;
+revoke all on function public.validate_agent_run_board() from public,anon,authenticated;
+revoke all on function public.validate_recurring_rule_card() from public,anon,authenticated;
+revoke all on function public.cancel_agent_when_leaving_ai() from public,anon,authenticated;
+revoke all on function public.capture_related_activity() from public,anon,authenticated;
+revoke all on function public.fan_out_activity_notification() from public,anon,authenticated;
+revoke all on function public.validate_planning_proposal(jsonb) from public,anon,authenticated;
+
+revoke all on function public.queue_card_for_ai(uuid,text) from public,anon,authenticated;
+revoke all on function public.create_planning_request(uuid,text,text,text) from public,anon,authenticated;
+revoke all on function public.set_card_dependencies(uuid,uuid[]) from public,anon,authenticated;
+revoke all on function public.set_card_assignees(uuid,uuid[]) from public,anon,authenticated;
+revoke all on function public.set_notification_read(uuid,boolean) from public,anon,authenticated;
+revoke all on function public.mark_all_notifications_read() from public,anon,authenticated;
+revoke all on function public.set_notification_preferences(boolean,boolean,boolean,boolean) from public,anon,authenticated;
+revoke all on function public.resolve_planning_request(uuid,boolean,jsonb) from public,anon,authenticated;
+revoke all on function public.control_agent_run(uuid,text) from public,anon,authenticated;
+revoke all on function public.approve_and_materialize_plan(uuid,jsonb) from public,anon,authenticated;
+revoke all on function public.convert_checklist_to_subtasks(uuid) from public,anon,authenticated;
+revoke all on function public.upsert_card_reminder(uuid,timestamptz) from public,anon,authenticated;
+revoke all on function public.upsert_recurring_rule(uuid,text,timestamptz) from public,anon,authenticated;
+
+grant execute on function public.queue_card_for_ai(uuid,text) to authenticated;
+grant execute on function public.create_planning_request(uuid,text,text,text) to authenticated;
+grant execute on function public.set_card_dependencies(uuid,uuid[]) to authenticated;
+grant execute on function public.set_card_assignees(uuid,uuid[]) to authenticated;
+grant execute on function public.set_notification_read(uuid,boolean) to authenticated;
+grant execute on function public.mark_all_notifications_read() to authenticated;
+grant execute on function public.set_notification_preferences(boolean,boolean,boolean,boolean) to authenticated;
+grant execute on function public.resolve_planning_request(uuid,boolean,jsonb) to authenticated;
+grant execute on function public.control_agent_run(uuid,text) to authenticated;
+grant execute on function public.approve_and_materialize_plan(uuid,jsonb) to authenticated;
+grant execute on function public.convert_checklist_to_subtasks(uuid) to authenticated;
+grant execute on function public.upsert_card_reminder(uuid,timestamptz) to authenticated;
+grant execute on function public.upsert_recurring_rule(uuid,text,timestamptz) to authenticated;
+
+revoke all on function public.claim_productivity_work(text) from public,anon,authenticated;
+revoke all on function public.renew_productivity_lease(text,uuid,text) from public,anon,authenticated;
+revoke all on function public.complete_agent_run(uuid,jsonb,text) from public,anon,authenticated;
+revoke all on function public.complete_planning_request(uuid,jsonb,text,text) from public,anon,authenticated;
+revoke all on function public.fail_productivity_work(text,uuid,text,text) from public,anon,authenticated;
+revoke all on function public.enqueue_due_reminders(timestamptz) from public,anon,authenticated;
+revoke all on function public.generate_recurring_cards(timestamptz) from public,anon,authenticated;
+revoke all on function public.claim_email_reminder(text) from public,anon,authenticated;
+revoke all on function public.authorize_email_reminder_delivery(uuid,text) from public,anon,authenticated;
+revoke all on function public.renew_email_reminder_lease(uuid,text) from public,anon,authenticated;
+revoke all on function public.complete_email_reminder(uuid,text) from public,anon,authenticated;
+revoke all on function public.fail_email_reminder(uuid,text,text) from public,anon,authenticated;
+
+grant execute on function public.claim_productivity_work(text) to service_role;
+grant execute on function public.renew_productivity_lease(text,uuid,text) to service_role;
+grant execute on function public.complete_agent_run(uuid,jsonb,text) to service_role;
+grant execute on function public.complete_planning_request(uuid,jsonb,text,text) to service_role;
+grant execute on function public.fail_productivity_work(text,uuid,text,text) to service_role;
+grant execute on function public.enqueue_due_reminders(timestamptz) to service_role;
+grant execute on function public.generate_recurring_cards(timestamptz) to service_role;
+grant execute on function public.claim_email_reminder(text) to service_role;
+grant execute on function public.authorize_email_reminder_delivery(uuid,text) to service_role;
+grant execute on function public.renew_email_reminder_lease(uuid,text) to service_role;
+grant execute on function public.complete_email_reminder(uuid,text) to service_role;
+grant execute on function public.fail_email_reminder(uuid,text,text) to service_role;
+
+commit;
