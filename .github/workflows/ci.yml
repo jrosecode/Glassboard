@@ -17,6 +17,12 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: node --check scripts/productivity-worker.mjs
+      - run: node --check scripts/glassboard-agent-client.mjs
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check supabase/functions/agent-api/index.ts
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
