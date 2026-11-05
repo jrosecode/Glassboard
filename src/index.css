@@ -504,3 +504,111 @@ button,input,textarea,select{font-family:inherit}
 .card-compact-description-preview{margin:0;padding:5px 0;font-size:13px;line-height:1.65;color:#d9dce7;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
 .card-compact-description-preview:hover{color:#fff}
 .card-compact-topbar span{display:block;max-width:calc(100% - 60px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Trello-inspired two-tier header, retaining Glassboard charcoal + purple theme */
+.neon-app{padding-top:108px!important}
+.neon-app .trello-topbar{
+ position:fixed!important;z-index:25!important;
+ top:0!important;left:0!important;right:0!important;
+ width:100%!important;height:49px!important;
+ display:flex!important;align-items:center!important;gap:9px!important;
+ margin:0!important;padding:0 17px!important;
+ background:#20232d!important;border:0!important;
+ border-bottom:1px solid #ffffff1a!important;border-radius:0!important;
+ box-shadow:none!important;backdrop-filter:none!important;
+}
+.trello-topbar .topbar-identity{display:flex;align-items:center;flex:0 0 210px;gap:8px;min-width:0}
+.neon-app .trello-topbar .grid-menu-trigger{
+ display:inline-flex!important;justify-content:center;align-items:center;
+ width:29px;min-width:29px;height:29px;padding:5px;border:0!important;background:transparent!important;color:#c5cada!important
+}
+.trello-topbar .topbar-brand{display:inline-flex;align-items:center;gap:7px;color:#f7f7ff;font-size:14px;letter-spacing:-.25px;white-space:nowrap}
+.trello-topbar .topbar-brand-mark{display:inline-flex;align-items:center;justify-content:center;background:#e4e9ff;color:#282b3c;width:24px;height:24px;border-radius:5px}
+.neon-app .trello-topbar .search{
+ flex:1 1 460px!important;max-width:780px!important;width:auto!important;min-width:100px!important;
+ height:32px!important;margin:0 auto!important;padding:0 11px!important;gap:8px!important;
+ background:#353b49!important;border:1px solid #5b6377!important;border-radius:6px!important;
+ box-shadow:none!important;color:#cdd2e2!important;
+}
+.neon-app .trello-topbar .search input{height:30px!important;font-size:12px!important}
+.neon-app .trello-topbar .search input::placeholder{color:#b3b9c9!important}
+.trello-topbar .topbar-create{
+ height:32px;min-width:85px;padding:0 11px;
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ border:1px solid #8664ea;border-radius:6px;background:#7542d9;
+ color:#fff;font-size:12px;font-weight:650;cursor:pointer;
+}
+.trello-topbar .topbar-create:hover{background:#8953ef}
+.neon-app .trello-topbar nav{flex:0 0 auto!important;display:flex;align-items:center;gap:3px!important;margin:0 0 0 auto!important}
+.neon-app .trello-topbar nav>.glass-button{min-width:31px;min-height:31px;width:31px;height:31px;padding:5px;color:#c2c6d6;background:transparent!important;border:0!important}
+.neon-app .trello-topbar nav>.glass-button:hover{background:#3d4252!important}
+.neon-app .trello-topbar nav .avatar{width:31px;height:31px;min-width:31px;font-size:12px}
+.neon-app .trello-topbar .grid-menu{top:43px;left:15px;z-index:50}
+.neon-app .workspace{max-width:none!important;margin:0!important}
+.neon-app .trello-boardbar{
+ position:sticky;top:49px;z-index:12;
+ display:flex;align-items:center;justify-content:space-between;gap:18px;
+ min-height:55px;margin:-59px -20px 9px -4px!important;
+ padding:8px 19px!important;
+ background:#252b39!important;border:0!important;border-bottom:1px solid #ffffff13!important;
+ border-radius:0!important;
+}
+.neon-app .trello-boardbar .board-title-wrap{min-width:0;flex:1 1 auto}
+.neon-app .trello-boardbar .board-title{padding:2px 3px!important}
+.neon-app .trello-boardbar .board-title h1,.neon-app .trello-boardbar h1{
+ font-size:16px!important;line-height:1.35!important;letter-spacing:-.2px!important;font-weight:750!important;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.neon-app .trello-boardbar .board-title-input{font-size:16px;max-width:350px}
+.neon-app .trello-boardbar .board-actions{gap:7px;flex-wrap:nowrap;margin-left:auto}
+.neon-app .trello-boardbar .board-actions .glass-button{
+ min-height:31px!important;height:31px!important;padding:5px 9px!important;
+ border-radius:6px!important;font-size:12px!important;white-space:nowrap;
+}
+.neon-app .trello-boardbar .board-actions .share-button{
+ display:inline-flex;align-items:center;gap:5px;order:5;
+ background:#d9d7eb!important;border:1px solid #c1bdd9!important;color:#29283a!important;
+}
+.neon-app .trello-boardbar .board-actions select{
+ width:auto!important;max-width:155px;height:31px!important;
+ padding:4px 23px 4px 9px!important;background:#333949!important;
+ border:1px solid #555c70!important;border-radius:6px!important;font-size:11px!important;
+}
+.neon-app .trello-boardbar .board-actions .boardbar-filter-button{display:none}
+.neon-app .archived-lists-toggle{margin:0 0 6px!important;padding:3px 6px!important;font-size:11px!important;color:#aaaec1!important}
+.neon-app .board-grid{
+ height:calc(100dvh - 171px)!important;
+ gap:10px!important;
+}
+@media(min-width:1001px){
+ .neon-app{padding-left:166px!important;padding-right:20px!important}
+ .neon-app .desktop-sidebar{top:104px!important;width:145px!important;padding-top:20px!important;border-right:1px solid #ffffff0b}
+ .neon-app .trello-boardbar{margin-left:-20px!important;margin-right:-20px!important}
+ .neon-app .board-grid{grid-template-columns:repeat(3,minmax(270px,300px))!important;grid-auto-columns:minmax(270px,300px)!important}
+}
+@media(min-width:651px) and (max-width:1000px){
+ .neon-app{padding-left:84px!important;padding-right:12px!important}
+ .neon-app .desktop-sidebar{top:104px!important;width:70px!important}
+ .neon-app .trello-boardbar{margin-left:-12px!important;margin-right:-12px!important}
+ .trello-topbar .topbar-identity{flex-basis:146px}
+}
+@media(max-width:650px){
+ .neon-app{padding:108px 10px 76px!important}
+ .neon-app .trello-topbar{height:54px!important;padding:0 9px!important;gap:5px!important}
+ .trello-topbar .topbar-identity{flex:0 0 36px;gap:0}
+ .trello-topbar .topbar-brand{display:none}
+ .neon-app .trello-topbar .search{height:36px!important;flex:1 1 auto!important;min-width:0!important;padding:0 8px!important;gap:5px!important}
+ .neon-app .trello-topbar .search input{height:34px!important;font-size:11px!important}
+ .trello-topbar .topbar-create{height:35px;min-width:36px;padding:0 8px;font-size:0;gap:0}
+ .trello-topbar .topbar-create svg{width:18px;height:18px}
+ .neon-app .trello-topbar nav .glass-button{display:none!important}
+ .neon-app .trello-topbar nav .avatar{display:grid!important;place-items:center;width:32px;height:32px}
+ .neon-app .trello-boardbar{top:54px!important;min-height:55px;margin:-54px -10px 8px!important;padding:8px 12px!important;gap:5px!important}
+ .neon-app .trello-boardbar .board-title h1,.neon-app .trello-boardbar h1{font-size:15px!important}
+ .neon-app .trello-boardbar .board-actions select{display:none!important}
+ .neon-app .trello-boardbar .board-actions{gap:5px}
+ .neon-app .trello-boardbar .board-actions .glass-button{padding:5px 7px!important}
+ .neon-app .trello-boardbar .board-actions .share-button{font-size:0!important;min-width:31px!important}
+ .neon-app .trello-boardbar .board-actions .share-button svg{width:17px;height:17px}
+ .neon-app .board-grid{height:calc(100dvh - 191px)!important}
+}
