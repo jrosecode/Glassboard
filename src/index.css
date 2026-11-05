@@ -283,3 +283,41 @@ button,input,textarea,select{font-family:inherit}
     line-height:1.5;
   }
 }
+
+/* Content-sized cards and compact list spacing */
+.neon-app .card-stack{gap:8px;padding:3px 4px 7px 3px}
+.neon-app .task-card .card-open{
+  min-height:0;
+  height:auto;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+  gap:7px;
+}
+.neon-app .task-card h3{margin-top:0;margin-bottom:0;line-height:1.42}
+.neon-app .board-card-meta{margin-top:2px;min-height:15px;gap:12px}
+.neon-app .board-card-labels{gap:4px}
+.neon-app .task-card .card-complete{top:8px}
+/* Robot control: invisible at rest, visible on desktop hover/focus
+   or after a 450ms touch-and-hold on a mobile card. */
+.neon-app .task-card .board-send-ai{
+ opacity:0!important;
+ visibility:hidden!important;
+ pointer-events:none!important;
+ transform:scale(.92);
+ transition:opacity .14s ease, transform .14s ease, visibility .14s ease;
+}
+@media (hover:hover) and (pointer:fine){
+ .neon-app .task-card:hover .board-send-ai,
+ .neon-app .task-card:focus-within .board-send-ai{
+   opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:scale(1);
+ }
+}
+@media (hover:none), (pointer:coarse){
+ .neon-app .task-card.ai-action-revealed .board-send-ai{
+   opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:scale(1);
+ }
+ .neon-app .task-card .card-open{padding-right:12px!important}
+ .neon-app .task-card h3{margin-right:0}
+ .neon-app .task-card.ai-action-revealed h3{padding-right:47px}
+ .neon-app .task-card .board-send-ai{right:9px;top:8px}
+}
