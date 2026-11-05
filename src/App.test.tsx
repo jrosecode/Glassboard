@@ -123,7 +123,7 @@ describe('Completed card archiving',()=>{
   const user=userEvent.setup();render(<App testMode/>);
   expect(screen.queryByRole('button',{name:'Archive Define launch narrative'})).not.toBeInTheDocument();
   await user.click(screen.getByRole('button',{name:'Mark Define launch narrative done'}));
-  const archive=screen.getByRole('button',{name:'Archive Define launch narrative'});
+  const archive=screen.getByLabelText('Archive Define launch narrative');
   expect(archive).toBeInTheDocument();
   await user.click(archive);
   expect(screen.queryByRole('button',{name:'Archive Define launch narrative'})).not.toBeInTheDocument();
