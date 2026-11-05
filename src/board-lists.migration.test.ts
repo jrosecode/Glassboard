@@ -3,6 +3,7 @@ import {resolve} from 'node:path';
 import {describe,expect,it} from 'vitest';
 
 const migrationPath=resolve(process.cwd(),'supabase/migrations/20261101050000_bootstrap_board_lists.sql');
+const accountBootstrapPath=resolve(process.cwd(),'supabase/migrations/20261101060000_bootstrap_default_board.sql');
 
 describe('board list bootstrap migration',()=>{
  it('starts every board with one blank normal list and one AI list',()=>{
@@ -69,5 +70,23 @@ describe('board list bootstrap migration',()=>{
  it('takes the board list lock before planning materialization derives list positions',()=>{
   const sql=readFileSync(migrationPath,'utf8').toLowerCase();
   expect(sql).toMatch(/approve_and_materialize_plan[\s\S]*pg_advisory_xact_lock\(hashtextextended\(request\.board_id::text,0\)\);[\s\S]*can_access_board\(request\.board_id\)[\s\S]*for list_row in[\s\S]*insert into public\.lists[\s\S]*max\(position\)/);
+ });
+});
+
+describe('default board bootstrap migration',()=>{
+ it('creates one authorized default workspace and board idempotently',()=>{
+  expect(existsSync(accountBootstrapPath)).toBe(true);
+  if(!existsSync(accountBootstrapPath))return;
+  const sql=readFileSync(accountBootstrapPath,'utf8').toLowerCase();
+  expect(sql).toContain('create or replace function public.ensure_default_board()');
+  expect(sql).toContain('auth.uid()');
+  expect(sql).toContain('pg_advisory_xact_lock');
+  expect(sql).toMatch(/pg_advisory_xact_lock[\s\S]*workspace_members[\s\S]*user_id=caller_id[\s\S]*board_members[\s\S]*user_id=caller_id/);
+  expect(sql).toContain('workspace_members_user_workspace_idx');
+  expect(sql).not.toContain('insert into public.workspace_members');
+  expect(sql).toContain("values('my workspace',caller_id)");
+  expect(sql).toContain("values(created_workspace,'my board',caller_id)");
+  expect(sql).toContain('revoke all on function public.ensure_default_board() from public,anon,authenticated');
+  expect(sql).toContain('grant execute on function public.ensure_default_board() to authenticated');
  });
 });
