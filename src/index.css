@@ -497,3 +497,10 @@ button,input,textarea,select{font-family:inherit}
  .card-compact-quick .row{grid-template-columns:1fr 1fr}
  .card-compact-activity-header h3{white-space:normal}
 }
+
+.card-compact-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.card-compact-section-heading h3{margin:0!important}
+.card-compact-section-heading button{border:1px solid #4a4e59;background:#353943;color:#e8eaf1;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:12px}
+.card-compact-description-preview{margin:0;padding:5px 0;font-size:13px;line-height:1.65;color:#d9dce7;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
+.card-compact-description-preview:hover{color:#fff}
+.card-compact-topbar span{display:block;max-width:calc(100% - 60px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
