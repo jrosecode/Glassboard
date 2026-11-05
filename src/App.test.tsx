@@ -136,3 +136,40 @@ describe('Completed card archiving',()=>{
   expect(screen.queryByText('Saving card…')).not.toBeInTheDocument();
  });
 });
+
+
+describe('AI card handoff feedback',()=>{
+ it('confirms a successful queue request and shows the target AI list',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.click(screen.getByRole('button',{name:'Send Define launch narrative to AI'}));
+  expect(await screen.findByRole('status')).toHaveTextContent('Card sent to AI Assistant');
+  const ai=screen.getByTestId('board-ai-list');
+  expect(within(ai).getByText('Define launch narrative')).toBeInTheDocument();
+  expect(within(ai).getByText('Queued')).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'View AI list'})).toBeInTheDocument();
+ });
+ it('loads the authoritative lists and cards after the server queues a task',async()=>{
+  const user=userEvent.setup();
+  const original={id:'c1',boardId:'b1',listId:'ideas',title:'Define launch narrative',description:'',priority:'high',labels:[],dueDate:null,completed:false,position:1};
+  const moved={...original,listId:'ai',agentRun:{id:'run',status:'queued'}};
+  const lists=vi.fn().mockResolvedValueOnce([{id:'ideas',boardId:'b1',kind:'normal',title:'Ideas',position:1,collapsed:false}]).mockResolvedValue([{id:'ideas',boardId:'b1',kind:'normal',title:'Ideas',position:1,collapsed:false},{id:'ai',boardId:'b1',kind:'ai',title:'AI Assistant',position:2,collapsed:false}]);
+  const cards=vi.fn().mockResolvedValueOnce([original]).mockResolvedValue([moved]);
+  const queueCardForAi=vi.fn().mockResolvedValue({listId:'ai',runId:'run',status:'queued'});
+  const repository=productionRepository({lists,cards,queueCardForAi});
+  render(<App repository={repository as never}/>);
+  await user.click(await screen.findByRole('button',{name:'Send Define launch narrative to AI'}));
+  await waitFor(()=>expect(queueCardForAi).toHaveBeenCalledTimes(1));
+  const ai=await screen.findByTestId('board-ai-list');
+  expect(within(ai).getByText('Define launch narrative')).toBeInTheDocument();
+  expect(await screen.findByText('Card sent to AI Assistant')).toBeInTheDocument();
+ });
+ it('shows an error instead of silently hiding a card if queueing fails',async()=>{
+  const user=userEvent.setup();
+  const base={id:'c1',boardId:'b1',listId:'ideas',title:'Define launch narrative',description:'',priority:'high',labels:[],dueDate:null,completed:false,position:1};
+  const repository=productionRepository({cards:vi.fn().mockResolvedValue([base]),queueCardForAi:vi.fn().mockRejectedValue(new Error('Queue unavailable'))});
+  render(<App repository={repository as never}/>);
+  await user.click(await screen.findByRole('button',{name:'Send Define launch narrative to AI'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Queue unavailable');
+  expect(screen.getByText('Define launch narrative')).toBeInTheDocument();
+ });
+});
