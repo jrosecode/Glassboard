@@ -235,3 +235,51 @@ button,input,textarea,select{font-family:inherit}
 .neon-app .card-stack{gap:17px;padding:7px 5px 9px}
 .neon-app .card-open{min-height:102px;padding:13px!important;gap:11px}
 .neon-app .list-actions-trigger{border-radius:8px}
+
+/* Completion controls: hover on desktop, fixed text gutter on touch screens. */
+.neon-app .task-card .card-open{
+  padding-left:44px!important;
+  min-width:0;
+}
+.neon-app .task-card h3{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.neon-app .task-card .card-complete{
+  left:8px;
+  top:11px;
+}
+@media (hover:hover) and (pointer:fine){
+  .neon-app .task-card .card-complete,
+  .neon-app .task-card .card-complete.checked{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:scale(.86);
+  }
+  .neon-app .task-card:hover .card-complete,
+  .neon-app .task-card:focus-within .card-complete{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:scale(1);
+  }
+}
+@media (hover:none), (pointer:coarse){
+  .neon-app .task-card .card-complete{
+    left:8px;
+    top:10px;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:scale(1);
+  }
+  .neon-app .task-card .card-open{
+    padding-left:52px!important;
+    padding-right:14px!important;
+  }
+  .neon-app .task-card h3{
+    margin-right:38px;
+    line-height:1.5;
+  }
+}
