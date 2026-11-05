@@ -83,3 +83,37 @@ describe('board list creation',()=>{
   expect(screen.queryByRole('heading',{name:'Board One List'})).not.toBeInTheDocument();
  });
 });
+
+describe('List action menus',()=>{
+ it('opens the list actions with the expected controls',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.click(screen.getByRole('button',{name:'List actions for Ideas'}));
+  expect(screen.getByRole('menu',{name:'Actions for Ideas'})).toBeInTheDocument();
+  expect(screen.getByRole('menuitem',{name:'Copy list'})).toBeInTheDocument();
+  expect(screen.getByRole('menuitem',{name:'Move all cards in this list'})).toBeInTheDocument();
+  expect(screen.getByRole('menuitem',{name:'Pin list'})).toBeInTheDocument();
+  expect(screen.getByRole('menuitem',{name:'Archive this list'})).toBeInTheDocument();
+ });
+ it('can sort cards and persist a color selection in the board UI',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.click(screen.getByRole('button',{name:'List actions for Ideas'}));
+  await user.click(screen.getByRole('menuitem',{name:'Sort by  ›'}));
+  await user.click(screen.getByRole('menuitem',{name:'Title A to Z'}));
+  await user.click(screen.getByRole('button',{name:'List actions for Ideas'}));
+  await user.click(screen.getByRole('button',{name:'Set green list color'}));
+  expect(screen.getByRole('button',{name:'List actions for Ideas'}).closest('.list')).toHaveStyle({borderTop:'5px solid #44c791'});
+ });
+ it('archives and restores a list without deleting it',async()=>{
+  const user=userEvent.setup();const confirmation=vi.spyOn(window,'confirm').mockReturnValue(true);
+  try{
+   render(<App testMode/>);
+   await user.click(screen.getByRole('button',{name:'List actions for Ideas'}));
+   await user.click(screen.getByRole('menuitem',{name:'Archive this list'}));
+   expect(screen.queryByRole('button',{name:'List actions for Ideas'})).not.toBeInTheDocument();
+   await user.click(screen.getByRole('button',{name:'Show archived lists'}));
+   await user.click(screen.getByRole('button',{name:'List actions for Ideas'}));
+   await user.click(screen.getByRole('menuitem',{name:'Restore this list'}));
+   expect(screen.getByRole('button',{name:'List actions for Ideas'})).toBeInTheDocument();
+  }finally{confirmation.mockRestore()}
+ });
+});
