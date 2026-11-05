@@ -321,3 +321,42 @@ button,input,textarea,select{font-family:inherit}
  .neon-app .task-card.ai-action-revealed h3{padding-right:47px}
  .neon-app .task-card .board-send-ai{right:9px;top:8px}
 }
+
+/* Slim Kanban containers and borderless text cards */
+.neon-app .sortable-list>.list{
+  padding:9px 7px 8px;
+  border-radius:15px;
+}
+.neon-app .list-header{
+  margin:0 4px 5px;
+  min-height:34px;
+}
+.neon-app .card-stack{
+  gap:6px;
+  padding:2px 1px 5px;
+}
+.neon-app .task-card,
+.neon-app .task-card:hover{
+  border:0;
+  border-radius:11px;
+  box-shadow:none;
+  transform:none;
+  background:#20232f;
+}
+.neon-app .task-card:hover{
+  background:#272a39;
+}
+.neon-app .task-card .card-open{
+  padding-top:9px!important;
+  padding-bottom:9px!important;
+  gap:6px;
+}
+.neon-app .add-card{
+  min-height:32px;
+  padding:5px 9px;
+}
+@media (max-width:650px){
+  .neon-app .sortable-list>.list{padding:8px 6px 7px}
+  .neon-app .list-header{margin:0 4px 5px}
+  .neon-app .card-stack{padding:2px 1px 4px;gap:6px}
+}
