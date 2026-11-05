@@ -390,3 +390,110 @@ button,input,textarea,select{font-family:inherit}
 .ai-queue-notice button{border:0;border-radius:7px;background:#3f3064;color:#f7efff;cursor:pointer;padding:7px 10px;font:inherit;white-space:nowrap}
 .ai-queue-notice button:last-child{background:transparent;padding:5px;display:grid;place-items:center}
 @media(max-width:650px){.ai-queue-notice{bottom:72px;left:12px;right:12px;max-width:none;justify-content:space-between}}
+
+/* Compact Trello-inspired card details: concise left-hand task view and activity rail */
+.card-compact-modal{
+ width:min(1100px,calc(100vw - 48px))!important;
+ height:min(750px,calc(100dvh - 64px))!important;
+ max-width:1100px!important;
+ max-height:calc(100dvh - 64px)!important;
+ border-radius:13px!important;
+ padding:0!important;
+ background:#202329!important;
+ overflow:hidden!important;
+}
+.card-compact-modal>header{position:absolute!important;top:5px!important;right:8px!important;left:auto!important;z-index:10!important;margin:0!important;padding:0!important;border:0!important}
+.card-compact-modal>header h2{display:none!important}
+.card-compact-modal>header .glass-button{width:35px!important;height:35px!important;background:transparent!important;border:0!important;color:#aeb3c1!important}
+.card-compact-topbar{height:48px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid #ffffff15;font-size:12px;color:#aeb3c1}
+.card-compact-modal .card-compact-layout,.card-compact-modal:not(:has(.card-detail-cover)) .card-compact-layout{
+ display:grid!important;grid-template-columns:minmax(0,1.16fr) minmax(300px,.84fr)!important;
+ gap:0!important;padding:0!important;height:calc(100% - 48px)!important;overflow:hidden!important;
+}
+.card-compact-modal .card-compact-main{
+ display:block!important;overflow-y:auto!important;min-width:0!important;
+ padding:23px 28px 30px!important;background:#202329!important;
+ scrollbar-width:thin;scrollbar-color:#515563 transparent;
+}
+.card-compact-modal .card-detail-title{grid-template-columns:26px minmax(0,1fr)!important;gap:10px!important;margin:0 0 16px!important}
+.card-compact-modal .card-detail-title>button{width:24px!important;height:28px!important}
+.card-compact-modal .card-detail-title>button:before{width:16px!important;height:16px!important;border-width:2px!important}
+.card-compact-modal .card-detail-title input{font-size:21px!important;font-weight:730!important;line-height:1.3!important;letter-spacing:-.5px!important;min-width:0!important;padding:4px 1px!important}
+.card-compact-actions{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 22px 36px}
+.card-compact-actions>button,.card-compact-actions>.glass-button{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ padding:6px 9px!important;min-height:31px!important;width:auto!important;
+ border:1px solid #474b56!important;border-radius:7px!important;background:#30333c!important;
+ color:#e0e3ec!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap;
+ box-shadow:none!important;cursor:pointer;
+}
+.card-compact-actions button:hover,.card-compact-actions button[aria-expanded="true"]{background:#414653!important}
+.card-compact-actions svg{width:14px;height:14px}
+.card-compact-quick:empty{display:none}
+.card-compact-quick:not(:empty){margin:0 0 18px 36px;padding:13px;border-radius:9px;background:#292c34}
+.card-compact-quick .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card-compact-quick label{font-size:12px}
+.card-compact-quick label input,.card-compact-quick label select{margin-top:5px}
+.card-compact-modal .card-compact-section{margin:0 0 22px;padding:0 0 17px;border:0;border-bottom:1px solid #ffffff12}
+.card-compact-modal .card-compact-section h3{margin:0 0 10px;font-size:13px;font-weight:750;letter-spacing:.1px;color:#e0e3eb}
+.card-compact-modal .card-compact-labels{margin-left:36px!important}
+.card-compact-modal .card-compact-labels label{display:block;font-size:0!important}
+.card-compact-modal .card-compact-labels input{
+ background:#292d37!important;border:1px solid #444a57!important;
+ width:100%;max-width:430px;min-height:33px;padding:6px 10px!important;
+ border-radius:7px;font-size:12px!important;color:#e6e5f0;
+}
+.card-compact-modal .card-compact-description{margin-left:36px!important}
+.card-compact-modal .card-compact-description label{display:block;font-size:0!important}
+.card-compact-modal .card-compact-description textarea{
+ min-height:84px!important;height:auto!important;width:100%!important;
+ margin:0!important;padding:11px!important;font-size:13px!important;line-height:1.55!important;
+ border:1px solid #424752!important;border-radius:8px!important;
+ background:#292d35!important;resize:vertical;
+}
+.card-compact-modal .card-compact-main .detail-section{padding:0!important;border:0!important;gap:8px}
+.card-compact-modal .card-compact-main .detail-section .glass-button{min-height:29px;padding:4px 10px;font-size:12px}
+.card-compact-modal .card-compact-main .card-detail-attachments .upload{
+ width:max-content;padding:7px 10px;border-radius:7px;font-size:12px
+}
+.card-compact-modal .card-compact-main .card-detail-attachments .attachment-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px;margin-top:8px}
+.card-compact-modal .card-compact-main .card-detail-attachments .attachment-gallery figure{display:grid;grid-template-columns:50px 1fr;font-size:11px}
+.card-compact-modal .card-compact-main .card-detail-attachments .attachment-gallery img{width:50px;height:45px;object-fit:cover}
+.card-compact-modal .card-compact-activity{
+ display:flex!important;flex-direction:column!important;min-width:0!important;
+ overflow-y:auto!important;padding:20px 18px 26px!important;border:0!important;
+ border-left:1px solid #ffffff19!important;border-radius:0!important;
+ background:#292d34!important;scrollbar-width:thin;
+}
+.card-compact-activity-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.card-compact-activity-header h3{font-size:13px!important;display:flex;align-items:center;gap:8px;margin:0!important;white-space:nowrap}
+.card-compact-activity-header button{background:#383c45;border:1px solid #5a5d68;color:#e4e5ee;font-size:12px;border-radius:7px;padding:7px 9px;white-space:nowrap;cursor:pointer}
+.card-compact-activity-header button:hover{background:#464b57}
+.card-compact-compose .inline{display:flex!important;align-items:center!important;gap:8px!important}
+.card-compact-compose .inline input{flex:1;min-width:0;min-height:39px!important;width:auto!important;height:39px!important;border-radius:7px!important;background:#20242d!important;border:1px solid #434953!important;padding:9px 12px!important;font-size:12px}
+.card-compact-compose .inline .glass-button{min-height:35px!important;padding:7px 12px!important;border-radius:7px!important}
+.card-compact-comments{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.card-compact-comment{display:grid;gap:7px}
+.card-compact-comment-author{display:flex;align-items:center;gap:7px;min-width:0;font-size:12px}
+.card-compact-comment-author>span{display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:50%;background:#43a7bd;color:#0c1720;font-size:10px;font-weight:750}
+.card-compact-comment-author strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-compact-comment-author time{font-size:10px;color:#a5b1c6;white-space:nowrap}
+.card-compact-comment .comment{margin-left:34px!important;padding:11px 13px!important;border-radius:8px!important;background:#20242d!important;color:#d9dce5!important;font-size:12px!important;line-height:1.65!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.card-compact-advanced{display:grid;gap:11px;padding:16px 0 0;margin-top:18px;border-top:1px solid #ffffff19}
+.card-compact-advanced h3{font-size:13px!important}
+.card-compact-advanced label{font-size:12px}
+.card-compact-advanced label select,.card-compact-advanced label input,.card-compact-advanced label textarea{margin-top:5px;min-width:0;max-width:100%}
+.card-compact-advanced .member-picker{border:1px solid #ffffff19;border-radius:8px;min-width:0;padding:10px}
+.card-compact-advanced .danger{justify-self:start}
+@media(max-width:700px){
+ .card-compact-modal{width:100vw!important;height:100dvh!important;max-height:none!important;border-radius:0!important}
+ .card-compact-modal .card-compact-layout,.card-compact-modal:not(:has(.card-detail-cover)) .card-compact-layout{
+  display:block!important;height:calc(100dvh - 48px)!important;overflow-y:auto!important
+ }
+ .card-compact-modal .card-compact-main,.card-compact-modal .card-compact-activity{overflow:visible!important;padding:18px 16px 20px!important}
+ .card-compact-modal .card-compact-activity{border-left:0!important;border-top:1px solid #ffffff19!important}
+ .card-compact-modal .card-detail-title input{font-size:19px!important}
+ .card-compact-actions,.card-compact-modal .card-compact-labels,.card-compact-modal .card-compact-description,.card-compact-quick:not(:empty){margin-left:0!important}
+ .card-compact-quick .row{grid-template-columns:1fr 1fr}
+ .card-compact-activity-header h3{white-space:normal}
+}
