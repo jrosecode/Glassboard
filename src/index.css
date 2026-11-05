@@ -360,3 +360,27 @@ button,input,textarea,select{font-family:inherit}
   .neon-app .list-header{margin:0 4px 5px}
   .neon-app .card-stack{padding:2px 1px 4px;gap:6px}
 }
+
+/* Stable native horizontal swiping on touch devices */
+@media (hover:none), (pointer:coarse){
+ .neon-app .board-grid{
+   scroll-snap-type:x proximity;
+   scroll-padding-inline:6px;
+   overscroll-behavior-x:contain;
+   -webkit-overflow-scrolling:touch;
+   touch-action:pan-x pan-y;
+ }
+ .neon-app .board-grid>.sortable-list{
+   scroll-snap-align:start;
+   scroll-snap-stop:normal;
+   min-width:0;
+   contain:layout;
+ }
+ .neon-app .task-card{
+   touch-action:pan-x pan-y;
+ }
+ .neon-app .card-stack{
+   overscroll-behavior-y:contain;
+   -webkit-overflow-scrolling:touch;
+ }
+}
