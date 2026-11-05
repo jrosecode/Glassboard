@@ -65,13 +65,12 @@ Deno.serve(async req=>{
     const params=new URL(req.url).searchParams;
     const requested=Number(params.get("limit")||"100");
     if(!Number.isInteger(requested)||requested<1||requested>200)return error("limit must be 1..200");
-    const since=params.get("since");const cursor=params.get("cursor");
-    let query=client.from("cards").select("id,board_id,list_id,title,description,priority,position,completed,due_at,updated_at,is_archived").eq("board_id",boardId).order("updated_at",{ascending:true}).order("id",{ascending:true}).limit(requested+1);
+    const since=params.get("since");const offset=Number(params.get("offset")||"0");if(!Number.isInteger(offset)||offset<0||offset>100000)return error("Invalid offset");
+    let query=client.from("cards").select("id,board_id,list_id,title,description,priority,position,completed,due_at,updated_at,is_archived").eq("board_id",boardId).order("updated_at",{ascending:true}).order("id",{ascending:true}).range(offset,offset+requested);
     if(since){if(Number.isNaN(Date.parse(since)))return error("Invalid since timestamp");query=query.gte("updated_at",since)}
-    if(cursor){if(!/^\\d{4}-\\d{2}-\\d{2}T/.test(cursor)||Number.isNaN(Date.parse(cursor)))return error("Invalid cursor");query=query.gt("updated_at",cursor)}
     const {data,error}=await query;
     if(error)throw error;
-    const rows=data||[];return json({cards:rows.slice(0,requested),hasMore:rows.length>requested,nextCursor:rows.length>requested?rows[requested-1].updated_at:null,deletedCardsNotIncluded:true});
+    const rows=data||[];return json({cards:rows.slice(0,requested),hasMore:rows.length>requested,nextOffset:rows.length>requested?offset+requested:null,deletedCardsNotIncluded:true});
    }
    if(method==="GET" && path[2]==="runs" && path.length===3){
     const {data,error}=await client.from("agent_runs").select("id,card_id,status,attempts,created_at,updated_at,error").eq("board_id",boardId).order("created_at",{ascending:false}).limit(50);
@@ -97,7 +96,7 @@ Deno.serve(async req=>{
    }
    if(method==="POST" && path[2]==="move" && path.length===3){
     const input=await bodyObject(req); const listId=String(input.list_id||"");
-    if(!uuid(listId)||!Number.isFinite(input.position)||Number(input.position)<0)return error("Valid list_id and nonnegative position required");
+    if(!uuid(listId)||!Number.isFinite(Number(input.position))||Number(input.position)<0)return error("Valid list_id and nonnegative position required");
     const {data:list,error:listErr}=await client.from("lists").select("id,kind,is_archived").eq("board_id",card.board_id).eq("id",listId).maybeSingle();
     if(listErr)throw listErr;if(!list || list.kind!=="normal" || list.is_archived)return error("Destination list unavailable",422);
     const {data,error}=await client.from("cards").update({list_id:listId,position:input.position}).eq("id",id).select("id,list_id,position").single();
