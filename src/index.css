@@ -73,3 +73,22 @@
 .list-color-picker button:focus-visible{outline:2px solid #3367d6;outline-offset:2px}
 .list-menu-note{padding:6px 9px;color:#777;font-size:12px}
 .archived-lists-toggle{border:0;background:transparent;color:#a8b9e0;font:inherit;font-size:11px;cursor:pointer;padding:2px 4px 8px}
+
+/* Keep completed-card archive actions outside normal layout flow. */
+.task-card .card-archive{
+ position:absolute;top:7px;right:7px;z-index:3;
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;
+ min-height:28px;padding:5px 7px;border:1px solid rgba(135,157,190,.35);
+ border-radius:7px;background:rgba(19,31,48,.96);color:#dce8fc;
+ font:inherit;font-size:11px;cursor:pointer;
+ opacity:0;visibility:hidden;pointer-events:none;
+ transition:opacity .12s ease,visibility .12s ease;
+}
+.task-card.completed:hover .card-archive,
+.task-card.completed:focus-within .card-archive{
+ opacity:1;visibility:visible;pointer-events:auto;
+}
+.task-card .card-archive:hover{background:rgba(67,87,117,.96);border-color:rgba(190,209,238,.6)}
+@media(hover:none),(pointer:coarse){
+ .task-card.completed .card-archive{opacity:1;visibility:visible;pointer-events:auto;min-height:34px}
+}
