@@ -68,3 +68,7 @@ The same Supabase project is ready for an iOS client, including email/password a
 ## Deployment
 
 `netlify.toml` builds `dist` and sends SPA routes to `index.html`. Configure both `VITE_SUPABASE_*` variables in the Netlify environment and add the deployed origin to Supabase Auth redirects before building. No deployment is performed by this repository.
+
+## AI-agent integration
+
+Glassboard exposes an authenticated, user-scoped Supabase Edge Function for agent CRUD and AI queue actions. See [Agent API and Hermes setup](docs/agent-api.md). The separate Ollama worker must run on a persistent machine; its online status is visible through the API health endpoint.
