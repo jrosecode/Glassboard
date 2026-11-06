@@ -12,14 +12,14 @@ const sharing:BoardSharing={
 const board=(id:string,title:string)=>({id,workspaceId:'w1',title,description:'',background:'coast',favorite:false,updatedAt:''});
 
 describe('board sharing',()=>{
-  it('offers secure links without an email or name invitation control',async()=>{
+  it('shows email invitations and a secure access-request link',async()=>{
     const user=userEvent.setup();
     render(<App testMode/>);
     await user.click(screen.getByRole('button',{name:'Share'}));
     const dialog=screen.getByRole('dialog',{name:'Share board'});
-    expect(within(dialog).getByText('Share this board with a link')).toBeInTheDocument();
-    expect(within(dialog).queryByPlaceholderText(/email/i)).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole('combobox',{name:/invite role/i})).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Share with a link')).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox',{name:'Invite email address'})).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox',{name:'Invite role'})).toBeInTheDocument();
   });
 
   it('creates a board share link and clears stale errors after success',async()=>{
@@ -47,7 +47,7 @@ describe('board sharing',()=>{
     const create=screen.getByRole('button',{name:'Create link'});
     await user.click(create);
     expect(create).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent('Saving changes');
+    expect(screen.getByRole('status')).toHaveTextContent('Saving or loading sharing');
     await user.click(create);
     expect(repository.createBoardShareLink).toHaveBeenCalledTimes(1);
     resolve('https://example.test/?share=token');
@@ -131,4 +131,40 @@ describe('board sharing',()=>{
     expect(screen.queryByRole('button',{name:'Favorite board'})).not.toBeInTheDocument();
     window.history.replaceState({},'', '/');
   });
+});
+
+
+describe('sharing invitation and link lifecycle',()=>{
+ it('creates an email-restricted invitation and exposes its copyable link',async()=>{
+  const user=userEvent.setup();
+  const createBoardEmailInvitation=vi.fn().mockResolvedValue({id:'invite-1',email:'guest@example.com',role:'member',url:'https://example.test/?invite=secret',expiresAt:'2026-11-13T20:00:00Z'});
+  const repository={boardSharing:vi.fn().mockResolvedValue(sharing),createBoardEmailInvitation,boardEmailInvitations:vi.fn().mockResolvedValue([]),boardShareLinkStatus:vi.fn().mockResolvedValue({active:false,createdAt:null})};
+  render(<ShareBoardModal repository={repository as never} boardId="b1" onClose={()=>{}}/>);
+  await screen.findByText('Demo User');
+  await user.type(screen.getByRole('textbox',{name:'Invite email address'}),'Guest@Example.com');
+  await user.click(screen.getByRole('button',{name:'Create invitation'}));
+  await waitFor(()=>expect(createBoardEmailInvitation).toHaveBeenCalledWith('b1','guest@example.com','member'));
+  expect(await screen.findByRole('textbox',{name:'Invitation link'})).toHaveValue('https://example.test/?invite=secret');
+  expect(screen.getByText(/Copy the link or open your email app/)).toBeInTheDocument();
+ });
+ it('shows a previously created share link as active and offers regeneration or revocation',async()=>{
+  const user=userEvent.setup();
+  const revokeBoardShareLink=vi.fn().mockResolvedValue(undefined);
+  const repository={boardSharing:vi.fn().mockResolvedValue(sharing),boardShareLinkStatus:vi.fn().mockResolvedValue({active:true,createdAt:'2026-11-06T20:00:00Z'}),boardEmailInvitations:vi.fn().mockResolvedValue([]),revokeBoardShareLink};
+  render(<ShareBoardModal repository={repository as never} boardId="b1" onClose={()=>{}}/>);
+  expect(await screen.findByRole('button',{name:'Regenerate link'})).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Revoke link'}));
+  await waitFor(()=>expect(revokeBoardShareLink).toHaveBeenCalledWith('b1'));
+  expect(screen.getByRole('button',{name:'Create link'})).toBeInTheDocument();
+ });
+ it('refreshes pending join requests and invitations without reopening the dialog',async()=>{
+  const user=userEvent.setup();
+  const boardSharing=vi.fn().mockResolvedValueOnce(sharing).mockResolvedValue({...sharing,requests:[{id:'req-1',displayName:'Guest User',requestedAt:'2026-11-06T20:00:00Z'}]});
+  const repository={boardSharing,boardShareLinkStatus:vi.fn().mockResolvedValue({active:false,createdAt:null}),boardEmailInvitations:vi.fn().mockResolvedValue([])};
+  render(<ShareBoardModal repository={repository as never} boardId="b1" onClose={()=>{}}/>);
+  await screen.findByText('Demo User');
+  await user.click(screen.getByRole('button',{name:'Refresh sharing'}));
+  await waitFor(()=>expect(boardSharing).toHaveBeenCalledTimes(2));
+  expect(screen.getByRole('tab',{name:'Requests 1'})).toBeInTheDocument();
+ });
 });
