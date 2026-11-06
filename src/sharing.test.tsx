@@ -12,14 +12,14 @@ const sharing:BoardSharing={
 const board=(id:string,title:string)=>({id,workspaceId:'w1',title,description:'',background:'coast',favorite:false,updatedAt:''});
 
 describe('board sharing',()=>{
-  it('offers secure links without an email or name invitation control',async()=>{
+  it('shows email invitations and a secure access-request link',async()=>{
     const user=userEvent.setup();
     render(<App testMode/>);
     await user.click(screen.getByRole('button',{name:'Share'}));
     const dialog=screen.getByRole('dialog',{name:'Share board'});
-    expect(within(dialog).getByText('Share this board with a link')).toBeInTheDocument();
-    expect(within(dialog).queryByPlaceholderText(/email/i)).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole('combobox',{name:/invite role/i})).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Share with a link')).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox',{name:'Invite email address'})).toBeInTheDocument();
+    expect(within(dialog).getByRole('combobox',{name:'Invite role'})).toBeInTheDocument();
   });
 
   it('creates a board share link and clears stale errors after success',async()=>{
@@ -47,7 +47,7 @@ describe('board sharing',()=>{
     const create=screen.getByRole('button',{name:'Create link'});
     await user.click(create);
     expect(create).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent('Saving changes');
+    expect(screen.getByRole('status')).toHaveTextContent('Saving or loading sharing');
     await user.click(create);
     expect(repository.createBoardShareLink).toHaveBeenCalledTimes(1);
     resolve('https://example.test/?share=token');
