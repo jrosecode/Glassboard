@@ -636,3 +636,59 @@ button,input,textarea,select{font-family:inherit}
 .neon-app .task-card .card-complete:not(.checked)::before{background:#F5F6F8;border-color:#657080}
 .neon-app .task-card .card-archive{background:#DCE0E8;border-color:#A7AEBC;color:#253145}
 .neon-app .task-card .card-archive:hover{background:#CFD6E2;border-color:#7C8798}
+
+/* Flush-left, expandable navigation rail. Board content follows the rail width. */
+@media (min-width:651px){
+ .neon-app.sidebar-collapsed{padding-left:78px!important}
+ .neon-app.sidebar-expanded{padding-left:202px!important}
+ .neon-app .desktop-sidebar{
+   position:fixed!important;top:49px!important;left:0!important;bottom:0!important;
+   width:68px!important;padding:12px 6px 20px!important;
+   gap:17px!important;display:flex!important;align-items:stretch!important;
+   background:#111116!important;border-right:1px solid #ffffff16!important;
+   z-index:21!important;overflow-x:hidden;overflow-y:auto;
+   transition:width .2s ease;
+ }
+ .neon-app.sidebar-expanded .desktop-sidebar{width:192px!important;padding-left:11px!important;padding-right:11px!important}
+ .neon-app .desktop-sidebar-heading{
+   display:flex;flex-direction:column;align-items:center;gap:8px;
+   width:100%;min-height:77px;padding:3px 0 8px;border-bottom:1px solid #ffffff12;
+ }
+ .neon-app.sidebar-expanded .desktop-sidebar-heading{flex-direction:row;justify-content:space-between;min-height:47px;gap:5px}
+ .neon-app .desktop-logo{display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;min-width:0!important}
+ .neon-app .neon-logo-mark{width:33px!important;height:34px!important;font-size:26px!important;flex:none}
+ .neon-app.sidebar-collapsed .desktop-logo>span:last-child{display:none!important}
+ .neon-app.sidebar-expanded .desktop-logo>span:last-child{display:inline!important;font-size:15px!important;font-weight:750!important}
+ .neon-app .desktop-sidebar-toggle{
+   display:grid;place-items:center;width:30px;height:30px;flex:none;
+   padding:0;border:1px solid #ffffff22;border-radius:8px;
+   background:#252834;color:#cfd2dd;cursor:pointer;
+ }
+ .neon-app .desktop-sidebar-toggle:hover{background:#3b3159;color:#fff}
+ .neon-app .desktop-sidebar-toggle:focus-visible{outline:2px solid #a36cff;outline-offset:2px}
+ .neon-app.sidebar-expanded .desktop-sidebar-toggle svg{transform:rotate(180deg)}
+ .neon-app .desktop-sidebar-links{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;gap:5px!important}
+ .neon-app .desktop-sidebar-links button{
+   position:relative!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+   width:100%!important;height:53px!important;min-height:53px!important;
+   padding:6px 3px!important;gap:5px!important;border-radius:9px!important;
+   font-size:10px!important;text-align:center!important;color:#999bad!important;
+   white-space:nowrap;overflow:hidden;transition:background .14s,color .14s;
+ }
+ .neon-app .desktop-sidebar-links button svg{width:18px!important;height:18px!important;flex:none}
+ .neon-app.sidebar-expanded .desktop-sidebar-links button{
+   flex-direction:row!important;justify-content:flex-start!important;text-align:left!important;
+   height:40px!important;min-height:40px!important;padding:8px 12px!important;gap:13px!important;font-size:12px!important;
+ }
+ .neon-app .desktop-sidebar-links button.active{background:#51357555!important;color:#fff!important}
+ .neon-app .desktop-sidebar-links button.active::after{display:none!important}
+ .neon-app .desktop-sidebar-links button:hover{background:#a05fff22!important;color:#fff!important}
+ .neon-app .desktop-sidebar-links button:focus-visible{outline:2px solid #8d58fa;outline-offset:-2px}
+ .neon-app .trello-boardbar{margin-left:-12px!important}
+}
+@media (max-width:650px){
+ .neon-app .desktop-sidebar{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .neon-app .desktop-sidebar{transition:none!important}
+}
