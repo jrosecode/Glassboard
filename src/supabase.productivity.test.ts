@@ -45,3 +45,39 @@ describe('board list repository boundary',()=>{
   expect(from).not.toHaveBeenCalled();
  });
 });
+
+
+describe('comment authorization recovery',()=>{
+ it('binds comments to the verified signed-in author',async()=>{
+  const insert=vi.fn().mockResolvedValue({error:null});
+  const getUser=vi.fn().mockResolvedValue({data:{user:{id:'current-user'}},error:null});
+  const repository=new SupabaseRepository({auth:{getUser},from:()=>({insert})} as never);
+  await repository.addComment('card-1','  Needs attention  ');
+  expect(getUser).toHaveBeenCalledTimes(1);
+  expect(insert).toHaveBeenCalledWith({card_id:'card-1',author_id:'current-user',body:'Needs attention'});
+ });
+ it('refreshes the session once after a denied comment insert and retries with the same author',async()=>{
+  const insert=vi.fn().mockResolvedValueOnce({error:{message:'new row violates row-level security policy for table "comments"'}}).mockResolvedValueOnce({error:null});
+  const getUser=vi.fn().mockResolvedValue({data:{user:{id:'current-user'}},error:null});
+  const refreshSession=vi.fn().mockResolvedValue({data:{session:{access_token:'new-jwt'}},error:null});
+  const repository=new SupabaseRepository({auth:{getUser,refreshSession},from:()=>({insert})} as never);
+  await repository.addComment('card-1','Retry me');
+  expect(refreshSession).toHaveBeenCalledTimes(1);
+  expect(insert).toHaveBeenCalledTimes(2);
+  expect(insert).toHaveBeenNthCalledWith(2,{card_id:'card-1',author_id:'current-user',body:'Retry me'});
+ });
+ it('does not retry indefinitely or bypass the policy if access is genuinely denied',async()=>{
+  const insert=vi.fn().mockResolvedValue({error:{message:'new row violates row-level security policy for table "comments"'}});
+  const getUser=vi.fn().mockResolvedValue({data:{user:{id:'current-user'}},error:null});
+  const refreshSession=vi.fn().mockResolvedValue({data:{session:{access_token:'new-jwt'}},error:null});
+  const repository=new SupabaseRepository({auth:{getUser,refreshSession},from:()=>({insert})} as never);
+  await expect(repository.addComment('card-1','Not allowed')).rejects.toThrow(/does not currently have write access/);
+  expect(insert).toHaveBeenCalledTimes(2);
+ });
+ it('requires a valid authenticated session and never attempts an anonymous insert',async()=>{
+  const insert=vi.fn();
+  const repository=new SupabaseRepository({auth:{getUser:vi.fn().mockResolvedValue({data:{user:null},error:{message:'expired'}})},from:()=>({insert})} as never);
+  await expect(repository.addComment('card-1','Comment')).rejects.toThrow(/Sign in again/);
+  expect(insert).not.toHaveBeenCalled();
+ });
+});
