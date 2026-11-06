@@ -55,6 +55,16 @@ function SortCard({card,onOpen,onToggle,onArchive,onAi,inAi=false}:{card:Card;on
 type CardAttachment=NonNullable<Card['attachments']>[number];
 function AttachmentPreview({attachment,onClose}:{attachment:CardAttachment;onClose:()=>void}){
  const closeRef=useRef<HTMLButtonElement>(null);
+ const dialogRef=useRef<HTMLElement>(null);
+ const onPreviewKeyDown=(event:React.KeyboardEvent<HTMLElement>)=>{
+  event.stopPropagation();
+  if(event.key==='Escape'){event.preventDefault();onClose();return}
+  if(event.key!=='Tab')return;
+  const focusable=Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')??[]);
+  if(focusable.length<2)return;
+  if(event.shiftKey&&document.activeElement===focusable[0]){event.preventDefault();focusable[focusable.length-1].focus()}
+  else if(!event.shiftKey&&document.activeElement===focusable[focusable.length-1]){event.preventDefault();focusable[0].focus()}
+ };
  const image=(attachment.mimeType?.startsWith('image/')||/\\.(png|jpe?g|webp|gif)$/i.test(attachment.name));
  const pdf=(attachment.mimeType==='application/pdf'||/\\.pdf$/i.test(attachment.name));
  useEffect(()=>{
@@ -66,7 +76,7 @@ function AttachmentPreview({attachment,onClose}:{attachment:CardAttachment;onClo
  },[onClose]);
  if(!attachment.signedUrl)return null;
  return createPortal(<div className="attachment-preview-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}>
-  <section className="attachment-preview-dialog" role="dialog" aria-modal="true" aria-label={`Preview ${attachment.name}`}>
+  <section ref={dialogRef} className="attachment-preview-dialog" role="dialog" aria-modal="true" onKeyDown={onPreviewKeyDown} aria-label={`Preview ${attachment.name}`}>
    <div className="attachment-preview-content">
     {image?<img src={attachment.signedUrl} alt={attachment.name}/>:pdf?<iframe title={attachment.name} src={attachment.signedUrl}/>:<div className="attachment-preview-unsupported"><Paperclip size={30}/><p>Preview unavailable for this file type.</p><p>Open the attachment in a new tab to view it.</p></div>}
    </div>
