@@ -13,7 +13,29 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
  async cards(boardId:string){const {data,error}=await this.db.from('cards').select('*,card_labels(label:labels(name)),card_members(user_id),attachments(id,name,storage_path,mime_type),card_dependencies!card_id(depends_on_card_id),comments(id,body,created_at,author:profiles!comments_author_id_fkey(display_name)),agent_runs(id,status,result,error,requires_approval,created_at),reminders(remind_at),recurring_rules(cadence,next_at)').eq('board_id',boardId).order('position');fail(error);return Promise.all((data??[]).map(async(c:any)=>{const attachments=await Promise.all((c.attachments??[]).map(async(a:any)=>{const {data:signed}=await this.db.storage.from('attachments').createSignedUrl(a.storage_path,3600);return {id:a.id,name:a.name,path:a.storage_path,mimeType:a.mime_type,signedUrl:signed?.signedUrl}}));const run=(c.agent_runs??[]).sort((a:any,b:any)=>String(b.created_at??'').localeCompare(String(a.created_at??'')))[0];const comments=(c.comments??[]).map((comment:any)=>({id:comment.id,body:comment.body,author:comment.author?.display_name??'Unknown',createdAt:comment.created_at})).sort((a:any,b:any)=>String(a.createdAt).localeCompare(String(b.createdAt)));return {id:c.id,boardId:c.board_id,listId:c.list_id,title:c.title,description:c.description??'',priority:c.priority,labels:(c.card_labels??[]).map((x:any)=>x.label.name),dueDate:c.due_at?.slice(0,10)??null,reminderAt:c.reminders?.[0]?.remind_at??null,completed:c.completed,isArchived:!!c.is_archived,position:Number(c.position),assignees:(c.card_members??[]).map((member:any)=>member.user_id),checklist:c.checklist??[],comments,customFields:c.custom_fields??{},dependencies:(c.card_dependencies??[]).map((d:any)=>d.depends_on_card_id),attachments,parentId:c.parent_id,taskType:c.task_type,blockedReason:c.blocked_reason,acceptanceCriteria:c.acceptance_criteria,effort:c.effort,source:c.source,completedAt:c.completed_at,approvalStatus:c.approval_status,agentRun:run?{id:run.id,status:run.status,result:run.result,error:run.error,requiresApproval:run.requires_approval}:null,recurrence:c.recurring_rules?.[0]?.cadence??null,recurrenceNextAt:c.recurring_rules?.[0]?.next_at??null,updatedAt:c.updated_at}})) as Promise<Card[]>}
  async createCard(boardId:string,listId:string,title:string,position:number,options:{dueAt?:string|null;source?:Card['source']}={}){const {data,error}=await this.db.from('cards').insert({board_id:boardId,list_id:listId,title,position,...(options.dueAt!==undefined?{due_at:options.dueAt}:{}),...(options.source?{source:options.source}:{})}).select().single();fail(error);return data}
  async patchCard(id:string,patch:Record<string,unknown>){const {error}=await this.db.from('cards').update(patch).eq('id',id);fail(error)}
- async addComment(cardId:string,body:string){const clean=body.trim();if(!clean)throw new Error('Comment cannot be empty');const {error}=await this.db.from('comments').insert({card_id:cardId,body:clean});fail(error)}
+ async addComment(cardId:string,body:string){
+  const clean=body.trim();
+  if(!clean)throw new Error('Comment cannot be empty');
+  if(!this.db.auth?.getUser){
+    const {error}=await this.db.from('comments').insert({card_id:cardId,body:clean});
+    fail(error);
+    return;
+  }
+  const {data:identity,error:identityError}=await this.db.auth.getUser();
+  if(identityError||!identity.user)throw new Error('Your sign-in session has expired. Sign in again before posting a comment.');
+  const authorId=identity.user.id;
+  const insert=()=>this.db.from('comments').insert({card_id:cardId,author_id:authorId,body:clean});
+  let {error}=await insert();
+  if(error&&/row.level security|permission denied/i.test(error.message)){
+    const {data:refreshed,error:refreshError}=await this.db.auth.refreshSession();
+    if(refreshError||!refreshed.session)throw new Error('Your session no longer has permission to post comments. Sign in again, then retry.');
+    const {data:verified,error:verifyError}=await this.db.auth.getUser();
+    if(verifyError||verified.user?.id!==authorId)throw new Error('Your account session changed. Sign in again before posting this comment.');
+    ({error}=await insert());
+    if(error&&/row.level security|permission denied/i.test(error.message))throw new Error('Comment not posted. Your account does not currently have write access to this board. Refresh the page or ask the board owner to review access.');
+  }
+  fail(error);
+}
  async deleteCard(id:string){const {error}=await this.db.from('cards').delete().eq('id',id);fail(error)}
  async reorderCard(id:string,listId:string,position:number){await this.patchCard(id,{list_id:listId,position})}
  async toggleList(id:string,collapsed:boolean){const {error}=await this.db.from('lists').update({is_collapsed:collapsed}).eq('id',id);fail(error)}
