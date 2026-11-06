@@ -258,3 +258,18 @@ describe('card metadata badges',()=>{
   expect(card!.querySelectorAll('.board-card-meta>span')).toHaveLength(1);
  });
 });
+
+
+describe('desktop sidebar navigation simplification',()=>{
+ it('removes Projects, Tasks, Calendar, and Timeline without removing the board and sharing actions',async()=>{
+  render(<App testMode/>);
+  const sidebar=screen.getByRole('complementary',{name:'Desktop navigation'});
+  for(const label of ['Projects','Tasks','Calendar','Timeline']){
+    expect(within(sidebar).queryByRole('button',{name:label})).not.toBeInTheDocument();
+  }
+  expect(within(sidebar).getByRole('button',{name:'Home'})).toBeInTheDocument();
+  expect(within(sidebar).getByRole('button',{name:'Board'})).toBeInTheDocument();
+  expect(within(sidebar).getByRole('button',{name:'Team'})).toBeInTheDocument();
+  expect(within(sidebar).getByRole('button',{name:'Settings'})).toBeInTheDocument();
+ });
+});
