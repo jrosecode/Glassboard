@@ -201,3 +201,18 @@ describe('new card ordering and visibility',()=>{
   expect(await screen.findByText('Visible after creation')).toBeInTheDocument();
  });
 });
+
+describe('collapsible desktop navigation',()=>{
+ it('starts as a flush-left compact rail and toggles the expanded state without changing views',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  const navigation=screen.getByRole('complementary',{name:'Desktop navigation'});
+  const root=navigation.parentElement;
+  expect(root).toHaveClass('sidebar-collapsed');
+  await user.click(within(navigation).getByRole('button',{name:'Expand sidebar'}));
+  expect(root).toHaveClass('sidebar-expanded');
+  expect(within(navigation).getByRole('button',{name:'Collapse sidebar'})).toHaveAttribute('aria-expanded','true');
+  expect(screen.getByRole('heading',{name:'Website Launch'})).toBeInTheDocument();
+  await user.click(within(navigation).getByRole('button',{name:'Collapse sidebar'}));
+  expect(root).toHaveClass('sidebar-collapsed');
+ });
+});
