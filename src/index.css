@@ -612,3 +612,27 @@ button,input,textarea,select{font-family:inherit}
  .neon-app .trello-boardbar .board-actions .share-button svg{width:17px;height:17px}
  .neon-app .board-grid{height:calc(100dvh - 191px)!important}
 }
+
+/* Light grey Kanban cards with dark text on the existing dark board */
+.neon-app .task-card,
+.neon-app .task-card:hover{
+  background:#E7E9ED;
+  color:#15171C;
+  border:0;
+  box-shadow:none;
+}
+.neon-app .task-card:hover{background:#F1F2F5}
+.neon-app .task-card .card-open{color:#15171C}
+.neon-app .task-card h3{color:#111318!important}
+.neon-app .task-card.completed h3{color:#656A73!important}
+.neon-app .task-card .board-card-meta,
+.neon-app .task-card .board-agent-status{color:#555B66}
+.neon-app .task-card .board-card-meta svg{color:#555B66}
+.neon-app .task-card .board-card-labels span{background:#D8D4F2;color:#332773}
+.neon-app .task-card .board-card-labels span:nth-child(2){background:#D7DCE5;color:#303948}
+.neon-app .task-card .board-card-labels span:nth-child(3){background:#CFDEEF;color:#244D78}
+.neon-app .task-card .board-send-ai{background:#D3DBEB;color:#344F85}
+.neon-app .task-card .card-complete:not(.checked){color:#465261}
+.neon-app .task-card .card-complete:not(.checked)::before{background:#F5F6F8;border-color:#657080}
+.neon-app .task-card .card-archive{background:#DCE0E8;border-color:#A7AEBC;color:#253145}
+.neon-app .task-card .card-archive:hover{background:#CFD6E2;border-color:#7C8798}
