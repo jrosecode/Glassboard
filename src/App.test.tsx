@@ -240,3 +240,21 @@ describe('multiline new-card composer',()=>{
   expect(await screen.findByText(/First line\s+Second line/)).toBeInTheDocument();
  });
 });
+
+
+describe('card metadata badges',()=>{
+ it('does not show empty comment or attachment indicators',async()=>{
+  render(<App testMode/>);
+  const card=(await screen.findByText('Define launch narrative')).closest('.task-card');
+  expect(card).not.toBeNull();
+  expect(card!.querySelector('.board-card-meta')).toBeNull();
+ });
+ it('shows only nonzero counts and preserves their actual values',async()=>{
+  const base={id:'c1',boardId:'b1',listId:'ideas',title:'Define launch narrative',description:'',priority:'medium',labels:[],dueDate:null,completed:false,position:1,comments:[{id:'comment',body:'Note',author:'Member',createdAt:'2026-11-06T12:00:00Z'}],attachments:[]};
+  render(<App repository={productionRepository({cards:vi.fn().mockResolvedValue([base])}) as never}/>);
+  const card=(await screen.findByText('Define launch narrative')).closest('.task-card');
+  expect(card!.querySelector('.board-card-meta')).toHaveTextContent('1');
+  expect(card!.querySelector('.board-card-meta')).not.toHaveTextContent('0');
+  expect(card!.querySelectorAll('.board-card-meta>span')).toHaveLength(1);
+ });
+});
