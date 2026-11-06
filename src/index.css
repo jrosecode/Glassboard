@@ -692,3 +692,32 @@ button,input,textarea,select{font-family:inherit}
 @media(prefers-reduced-motion:reduce){
  .neon-app .desktop-sidebar{transition:none!important}
 }
+
+/* Multiline new-card composer: wrap long titles inside the list */
+.neon-app .new-card textarea{
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:92px;
+  max-height:220px;
+  padding:12px 13px;
+  border:1px solid #aeb4c1;
+  border-radius:10px;
+  background:#e7e9ed;
+  color:#111318;
+  font:inherit;
+  font-size:13px;
+  line-height:1.5;
+  resize:vertical;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  overflow-y:auto;
+}
+.neon-app .new-card textarea::placeholder{color:#68717f}
+.neon-app .new-card textarea:focus-visible{outline:2px solid #9261f3;outline-offset:1px}
+.neon-app .new-card>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+@media(max-width:650px){
+ .neon-app .new-card textarea{font-size:16px}
+}
