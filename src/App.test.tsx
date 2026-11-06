@@ -216,3 +216,27 @@ describe('collapsible desktop navigation',()=>{
   expect(root).toHaveClass('sidebar-collapsed');
  });
 });
+
+
+describe('multiline new-card composer',()=>{
+ it('allows a long title to wrap in a textarea and saves the whole title',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.click(screen.getAllByRole('button',{name:/add card/i})[0]);
+  const title=screen.getByRole('textbox',{name:'Card title'});
+  expect(title.tagName).toBe('TEXTAREA');
+  const longTitle='Follow up with the resident about reasonable accommodation and complete all outstanding documentation';
+  await user.type(title,longTitle);
+  expect(title).toHaveValue(longTitle);
+  await user.click(screen.getByRole('button',{name:'Create card'}));
+  expect(await screen.findByText(longTitle)).toBeInTheDocument();
+ });
+ it('submits with Enter and preserves Shift+Enter as a line break',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.click(screen.getAllByRole('button',{name:/add card/i})[0]);
+  const title=screen.getByRole('textbox',{name:'Card title'});
+  await user.type(title,'First line{Shift>}{Enter}{/Shift}Second line');
+  expect(title).toHaveValue('First line\nSecond line');
+  await user.keyboard('{Enter}');
+  expect(await screen.findByText(/First line\s+Second line/)).toBeInTheDocument();
+ });
+});
