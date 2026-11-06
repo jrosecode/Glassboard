@@ -173,3 +173,31 @@ describe('AI card handoff feedback',()=>{
   expect(screen.getByText('Define launch narrative')).toBeInTheDocument();
  });
 });
+
+
+describe('new card ordering and visibility',()=>{
+ it('places a new card after the highest position and scrolls its list to the bottom',async()=>{
+  const user=userEvent.setup();
+  const first={id:'first',boardId:'b1',listId:'ideas',title:'First task',description:'',priority:'medium',labels:[],dueDate:null,completed:false,position:1};
+  const last={...first,id:'last',title:'Last task',position:75};
+  const createCard=vi.fn().mockResolvedValue({id:'created'});
+  render(<App repository={productionRepository({cards:vi.fn().mockResolvedValue([first,last]),createCard}) as never}/>);
+  const stack=await waitFor(()=>{const element=document.querySelector<HTMLElement>('.card-stack[data-list-id="ideas"]');expect(element).not.toBeNull();return element!});
+  Object.defineProperty(stack,'scrollHeight',{configurable:true,value:900});
+  await user.click(screen.getByRole('button',{name:/add card/i}));
+  await user.type(screen.getByLabelText('Card title'),'New bottom task');
+  await user.click(screen.getByRole('button',{name:'Create card'}));
+  await waitFor(()=>expect(createCard).toHaveBeenCalledWith('b1','ideas','New bottom task',76));
+  await waitFor(()=>expect(stack.scrollTop).toBe(900));
+  expect(within(stack).getAllByRole('heading',{level:3}).map(item=>item.textContent)).toEqual(['First task','Last task','New bottom task']);
+ });
+ it('clears a hiding search or priority filter so the new card remains visible',async()=>{
+  const user=userEvent.setup();render(<App testMode/>);
+  await user.type(screen.getByLabelText('Search cards'),'not-present');
+  await user.click(screen.getAllByRole('button',{name:/add card/i})[0]);
+  await user.type(screen.getByLabelText('Card title'),'Visible after creation');
+  await user.click(screen.getByRole('button',{name:'Create card'}));
+  expect(screen.getByLabelText('Search cards')).toHaveValue('');
+  expect(await screen.findByText('Visible after creation')).toBeInTheDocument();
+ });
+});
