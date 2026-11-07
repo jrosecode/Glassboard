@@ -403,3 +403,77 @@
     text-overflow:ellipsis;
   }
 }
+
+/* Shared navigation: desktop uses the permanent left sidebar only.
+   Mobile uses the top-left menu toggle and a full-height slide-out drawer. */
+@media (min-width:651px) {
+  .neon-app .trello-topbar .grid-menu-trigger { display:none!important; }
+  .trello-topbar .topbar-identity { flex-basis:174px; }
+  .mobile-sidebar-backdrop { display:none!important; }
+}
+@media (max-width:650px) {
+  .neon-app .trello-topbar .grid-menu-trigger {
+    display:inline-flex!important;
+    align-items:center;justify-content:center;
+    width:36px!important;min-width:36px!important;height:36px!important;
+    border-radius:10px!important;
+  }
+  .mobile-sidebar-backdrop {
+    position:fixed;inset:0;z-index:1500;
+    background:rgba(4,5,12,.67);
+    display:flex;justify-content:flex-start;
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  }
+  .mobile-sidebar-drawer {
+    width:min(310px,86vw);height:100dvh;
+    box-sizing:border-box;
+    display:flex;flex-direction:column;
+    overflow-y:auto;overscroll-behavior:contain;
+    padding:calc(20px + env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));
+    background:#20232c;
+    border-right:1px solid rgba(190,184,210,.16);
+    color:#eef0f7;
+    box-shadow:12px 0 40px rgba(0,0,0,.35);
+    animation:glassboard-sidebar-slide .2s ease-out both;
+  }
+  .mobile-sidebar-heading{
+    display:flex;align-items:center;justify-content:space-between;
+    min-height:44px;margin-bottom:25px;padding:0 6px;
+  }
+  .mobile-sidebar-heading .desktop-logo{font-size:18px}
+  .mobile-sidebar-close {
+    width:40px;height:40px;display:grid;place-items:center;
+    border:1px solid rgba(190,184,210,.18);
+    border-radius:12px;background:#2d303b;color:#e6e6f2;
+    cursor:pointer;
+  }
+  .mobile-sidebar-links{display:flex;flex-direction:column;gap:5px}
+  .mobile-sidebar-links button {
+    display:flex;align-items:center;gap:15px;
+    width:100%;min-height:48px;
+    border:0;border-radius:12px;
+    padding:11px 15px;
+    background:transparent;color:#afb0be;
+    font:inherit;font-size:14px;font-weight:550;
+    text-align:left;cursor:pointer;
+  }
+  .mobile-sidebar-links button svg{width:19px;height:19px;flex-shrink:0}
+  .mobile-sidebar-links button.active,
+  .mobile-sidebar-links button:hover,
+  .mobile-sidebar-links button:focus-visible {
+    background:linear-gradient(110deg,rgba(129,75,239,.30),rgba(107,67,178,.12));
+    color:#fff;
+  }
+  .mobile-sidebar-section {
+    padding:25px 15px 11px;
+    font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;color:#85879b;
+  }
+}
+@keyframes glassboard-sidebar-slide {
+  from{transform:translateX(-16px);opacity:.6}
+  to{transform:translateX(0);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .mobile-sidebar-drawer{animation:none}
+}
