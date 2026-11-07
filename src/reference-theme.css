@@ -81,3 +81,51 @@
     transform: translateY(-50%);
   }
 }
+
+/* Fix Settings / AI Providers scroll containment on desktop and mobile.
+   The modal clips overflow, so the inner grid must have a definite height
+   and the content cell needs min-height:0 for overflow-y:auto to work. */
+.settings-modal-v2 {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.settings-modal-v2 > header {
+  flex: 0 0 auto;
+}
+.settings-modal-v2 > .glassboard-settings-layout {
+  flex: 1 1 auto;
+  height: min(680px, calc(92dvh - 105px));
+  max-height: none;
+  min-height: 0;
+  overflow: hidden;
+}
+.settings-modal-v2 .glassboard-settings-content {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+@media (max-width: 760px) {
+  .settings-modal-v2 {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+  .settings-modal-v2 > .glassboard-settings-layout {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+  .settings-modal-v2 .glassboard-settings-nav {
+    flex: 0 0 auto;
+  }
+  .settings-modal-v2 .glassboard-settings-content {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+}
