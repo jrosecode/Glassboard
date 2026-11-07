@@ -477,3 +477,92 @@
 @media(prefers-reduced-motion:reduce){
   .mobile-sidebar-drawer{animation:none}
 }
+
+/* Mobile drawer isolation and proportional layout. Mounted at document.body so
+   top-toolbar navigation rules cannot center/shift the drawer's links. */
+@media (max-width:650px) {
+  .mobile-sidebar-backdrop {
+    width:100vw;
+    height:100dvh;
+    inset:0;
+    align-items:stretch;
+    justify-content:flex-start;
+  }
+  .mobile-sidebar-drawer {
+    flex:0 0 min(284px,82vw);
+    width:min(284px,82vw);
+    max-width:calc(100vw - 48px);
+    min-width:0;
+    margin:0;
+    padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 22px);
+    align-items:stretch;
+  }
+  .mobile-sidebar-heading {
+    flex:0 0 auto;
+    width:100%;
+    min-width:0;
+    padding:0 2px;
+    margin:0 0 18px;
+    gap:10px;
+  }
+  .mobile-sidebar-heading .desktop-logo {
+    display:flex !important;
+    flex:1 1 auto;
+    justify-content:flex-start !important;
+    align-items:center;
+    min-width:0;
+    gap:9px;
+    font-size:15px;
+    white-space:nowrap;
+  }
+  .mobile-sidebar-heading .desktop-logo>span:last-child {
+    display:inline !important;
+    font-size:15px !important;
+    font-weight:750;
+  }
+  .mobile-sidebar-heading .neon-logo-mark {
+    flex:0 0 33px;
+    width:33px;
+    height:35px;
+    font-size:26px;
+  }
+  .mobile-sidebar-close{flex:0 0 36px;width:36px;height:36px}
+  .mobile-sidebar-links {
+    display:flex;
+    flex:0 0 auto;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    gap:4px;
+    width:100%;
+    min-width:0;
+    max-width:none;
+    margin:0;
+    padding:0;
+  }
+  .mobile-sidebar-links button {
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+    flex:0 0 auto;
+    gap:12px;
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    margin:0;
+    padding:10px 12px;
+    font-size:14px;
+    line-height:1.4;
+    text-align:left;
+    white-space:nowrap;
+  }
+  .mobile-sidebar-links button svg{width:18px;height:18px;flex:0 0 18px}
+  .mobile-sidebar-section {
+    flex:0 0 auto;
+    width:100%;
+    margin-top:11px;
+    padding:14px 12px 9px;
+    border-top:1px solid rgba(190,184,210,.12);
+  }
+}
