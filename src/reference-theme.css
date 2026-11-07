@@ -43,3 +43,41 @@
   .neon-app .board-grid {gap: 10px;}
   .productivity-overlay {border-radius: 18px 18px 0 0;}
 }
+
+/* Mobile Kanban: nearly full-width columns and desktop-proportioned cards.
+   This changes only dimensions, never card fills, fonts or text colors. */
+@media (max-width: 650px) {
+  .neon-app .board-grid {
+    grid-template-columns: repeat(3, calc(100vw - 24px)) !important;
+    grid-auto-columns: calc(100vw - 24px) !important;
+    gap: 10px !important;
+    scroll-padding-inline: 0;
+  }
+  .neon-app .board-grid > .sortable-list {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+  .neon-app .board-grid > .sortable-list > .list {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .neon-app .card-stack,
+  .neon-app .card-stack > *,
+  .neon-app .task-card {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .neon-app .task-card .card-open {
+    width: 100%;
+    min-height: 48px;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+  .neon-app .task-card .card-complete {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
