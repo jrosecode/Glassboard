@@ -379,3 +379,27 @@
  .ai-chat-typing-dots i{animation:none;opacity:.8}
  .ai-chat-compose-row .ai-chat-send-button{transition:none}
 }
+
+/* iOS mobile viewport: Safari zooms the entire page when a text control
+   smaller than 16px receives focus, and can retain that zoom on refresh.
+   Keep the mobile layout at the device's natural scale without disabling
+   user pinch zoom or changing non-input typography. */
+@media (max-width:650px) {
+  .neon-app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .neon-app textarea,
+  .neon-app select,
+  .ai-chat-panel textarea,
+  .ai-chat-panel input,
+  .settings-modal-v2 input:not([type="checkbox"]):not([type="radio"]),
+  .settings-modal-v2 textarea,
+  .settings-modal-v2 select {
+    font-size:16px !important;
+  }
+  .neon-app .trello-topbar .search input {
+    font-size:16px !important;
+    min-width:0;
+  }
+  .neon-app .trello-topbar .search input::placeholder {
+    text-overflow:ellipsis;
+  }
+}
