@@ -13,6 +13,11 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
   const {data,error}=await this.db.from('ai_chat_messages').select('id,user_id,board_id,role,content,status,error,provider,model_id,created_at').eq('board_id',boardId).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(200);
   fail(error);return ((data??[]) as AIChatMessage[]).reverse();
  }
+ async aiChatGenerate(replyId:string):Promise<void>{
+  const {data,error}=await this.db.functions.invoke('ai-chat',{body:{replyId}});
+  if(error)throw new Error(error.message||'Unable to contact AI provider');
+  if(data?.error)throw new Error(String(data.error));
+ }
  async aiChatSend(boardId:string,content:string):Promise<string>{
   const message=content.trim();
   if(!message||message.length>4000)throw new Error('Messages must be between 1 and 4000 characters');
