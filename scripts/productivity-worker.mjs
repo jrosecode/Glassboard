@@ -76,6 +76,18 @@ async function usageThisMonth(userId){
  if(!response.ok)throw new Error('Cannot verify monthly AI budget');
  return Number(response.headers.get('content-range')?.split('/')[1]||0);
 }
+const PROVIDER_KEYS={openai:'OPENAI_API_KEY',moonshot:'MOONSHOT_API_KEY',zai:'ZAI_API_KEY',openrouter:'OPENROUTER_API_KEY',anthropic:'ANTHROPIC_API_KEY'};
+async function credentialsFor(userId,settings){
+ const env={...process.env};
+ for(const provider of new Set([settings.provider,...(settings.fallback_enabled&&!settings.local_only?[settings.fallback_provider]:[])])){
+  const envName=PROVIDER_KEYS[provider];
+  if(!envName)continue;
+  // The encrypted Vault key belongs to the task requester and is never returned to the browser.
+  const key=await rpc('ai_worker_provider_key',{p_user_id:userId,p_provider:provider});
+  if(typeof key==='string'&&key)env[envName]=key;
+ }
+ return env;
+}
 async function processWork(work,workerId){
  const lease=setInterval(()=>void rpc('renew_productivity_lease',{p_kind:work.kind,p_id:work.id,p_worker_id:workerId}).catch(error=>console.error('Lease renewal failed',error)),60000);
  try{
@@ -84,7 +96,8 @@ async function processWork(work,workerId){
   const prompt=work.kind==='agent'
    ?`Complete this Glassboard card safely. Return concise JSON with summary and suggestedChanges. You cannot directly execute external actions.\\n${JSON.stringify(work.input)}`
    :`Create a Glassboard plan as JSON: {"title":string,"lists":[{"title":string,"cards":[{"title":string,"priority":"low|medium|high|urgent","description":string}]}]}.\\nPrompt: ${work.prompt}`;
-  const result=await generateWithFallback({settings,prompt,json:true,signal:AbortSignal.timeout(180000)});
+  const modelEnvironment=await credentialsFor(userId,settings);
+  const result=await generateWithFallback({settings,prompt,json:true,env:modelEnvironment,signal:AbortSignal.timeout(180000)});
   // Count actual model usage, not an estimated fixed credit amount.
   await tablePost('ai_usage_events',{run_id:work.kind==='agent'?work.id:null,user_id:userId,provider:result.provider,model_id:result.model,input_tokens:result.inputTokens,output_tokens:result.outputTokens,duration_ms:result.durationMs,success:true});
   let parsed;
