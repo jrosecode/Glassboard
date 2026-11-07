@@ -17,18 +17,24 @@ const MODEL_CHECK_MS=30000;
 let modelCheckedAt=0,modelAvailable=false,reportedAt=0,reportedStatus='';
 async function checkModel(){
  if(Date.now()-modelCheckedAt<MODEL_CHECK_MS)return modelAvailable;
- if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
  modelCheckedAt=Date.now();
- try{
-  const response=await fetch(`${OLLAMA_URL}/api/tags`,{signal:AbortSignal.timeout(5000)});
-  if(!response.ok)throw new Error(`Ollama health: ${response.status}`);
-  const json=await response.json();
-  const modelNames=(json.models??[]).map(item=>item.name||item.model);
-  const resolved=MODEL.includes(':')?MODEL:`${MODEL}:latest`;
-  modelAvailable=modelNames.includes(MODEL)||modelNames.includes(resolved);
-  if(!modelAvailable)console.error(`Ollama model ${MODEL} is not installed; queued work remains unclaimed`);
- }catch(e){modelAvailable=false;console.error('AI model is unavailable; queued tasks are preserved:',String(e))}
- return modelAvailable;
+ if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
+ const endpoints=[
+  {name:'Ollama',url:`${OLLAMA_URL}/api/tags`,modelsKey:'models'},
+  {name:'LM Studio',url:`${(process.env.LMSTUDIO_URL||'http://127.0.0.1:1234').replace(/\\/$/,'')}/v1/models`,modelsKey:'data'}
+ ];
+ for(const endpoint of endpoints){
+  try{
+   const response=await fetch(endpoint.url,{signal:AbortSignal.timeout(5000)});
+   if(!response.ok)continue;
+   const body=await response.json();
+   if(Array.isArray(body[endpoint.modelsKey])&&body[endpoint.modelsKey].length){
+    modelAvailable=true;return true;
+   }
+  }catch{/* Try next local provider. */}
+ }
+ modelAvailable=false;console.error('No configured cloud provider or reachable local model server; queue will remain pending');
+ return false;
 }
 async function heartbeat(status){
  if(status!==reportedStatus || Date.now()-reportedAt>30000){
@@ -64,7 +70,7 @@ async function userSettings(kind,runId){
 async function usageThisMonth(userId){
  const start=new Date();start.setUTCDate(1);start.setUTCHours(0,0,0,0);
  const url=new URL(`${SUPABASE_URL}/rest/v1/ai_usage_events`);
- url.searchParams.set('select','id');url.searchParams.set('user_id','eq.'+userId);
+ url.searchParams.set('select','id');url.searchParams.set('limit','1');url.searchParams.set('user_id','eq.'+userId);
  url.searchParams.set('created_at','gte.'+start.toISOString());
  const response=await fetch(url,{headers:{...headers,Prefer:'count=exact'},signal:AbortSignal.timeout(12000)});
  if(!response.ok)throw new Error('Cannot verify monthly AI budget');
