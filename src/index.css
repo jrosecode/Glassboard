@@ -777,3 +777,71 @@ button,input,textarea,select{font-family:inherit}
 .card-compact-modal .card-detail-attachments .attachment-gallery .attachment-preview-image img{height:52px;width:64px;object-fit:cover;border-radius:5px}
 .card-compact-modal .card-detail-attachments .attachment-gallery .attachment-file{width:100%}
 @media(max-width:650px){.attachment-preview-backdrop{padding:0}.attachment-preview-dialog{width:100%;height:100dvh;max-height:none;border-radius:0}.attachment-preview-footer{padding:10px 12px;gap:10px}.attachment-preview-file-info strong{font-size:13px}.attachment-preview-footer a{font-size:11px}}
+
+/* Organized Glassboard settings with a dedicated AI provider workspace */
+.settings-modal-v2{width:min(1040px,calc(100vw - 34px))!important;max-width:1040px!important;max-height:min(92dvh,960px)!important;background:#20232c!important;border:1px solid #383d4c!important;border-radius:16px!important;overflow:hidden!important}
+.glassboard-settings-layout{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:480px;max-height:calc(88dvh - 88px);overflow:hidden;color:#e9eaf2}
+.glassboard-settings-nav{display:flex;flex-direction:column;gap:6px;min-width:0;padding:13px 10px;background:#191c25;border-right:1px solid #383d4c}
+.glassboard-settings-nav button{display:flex;align-items:center;gap:11px;min-height:40px;width:100%;padding:9px 11px;text-align:left;border:1px solid transparent;border-radius:9px;background:transparent;color:#aeb5c7;font-size:12px;font-weight:600;cursor:pointer}
+.glassboard-settings-nav button.active{background:#443369;color:#f2eaff;border-color:#825ac4}
+.glassboard-settings-nav button:hover:not(.active){background:#2b3040;color:#fff}
+.glassboard-settings-content{overflow-y:auto;min-width:0;padding:22px 26px 32px;scrollbar-width:thin}
+.glassboard-settings-content .settings{display:grid;gap:17px;align-content:start}
+.glassboard-settings-content .settings h2{font-size:19px;margin:0 0 12px}
+.settings-muted-note{font-size:12px;color:#9da6b9}
+.ai-settings{display:grid;gap:18px;color:#edf0f8}
+.ai-settings-intro{display:flex;align-items:center;gap:13px}
+.ai-settings-intro h2{font-size:21px;font-weight:750;margin:0 0 5px;letter-spacing:-.4px}
+.ai-settings-intro p,.ai-section-heading p{margin:0;font-size:12px;line-height:1.5;color:#a4aec2}
+.ai-settings-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#573b89;color:#e9d8ff;flex:none}
+.ai-settings-section{border:1px solid #383e4f;border-radius:13px;padding:18px;background:#262a35;display:grid;gap:14px}
+.ai-section-heading{display:flex;gap:11px;align-items:center}
+.ai-section-heading>svg{color:#b89bea;flex:none}
+.ai-section-heading h3{font-size:14px;margin:0 0 4px;font-weight:730}
+.ai-provider-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ai-provider-option{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;min-height:59px;min-width:0;padding:11px 12px;background:#1d212b;border:1px solid #454b5d;border-radius:9px;color:#e7e9f2;cursor:pointer;text-align:left}
+.ai-provider-option strong{font-size:12px;font-weight:700;line-height:1.2}
+.ai-provider-option small{font-size:10px;color:#a7afc3}
+.ai-provider-option.selected{background:#40315f;border-color:#a57de7;box-shadow:inset 0 0 0 1px #a57de740}
+.ai-provider-option:hover{border-color:#9374bd}
+.ai-field{display:grid;gap:7px;min-width:0}
+.ai-field label{font-size:12px;color:#cfd4e2;font-weight:650}
+.ai-field select,.ai-field input{width:100%;height:37px;border:1px solid #4a5063;border-radius:8px;background:#1c2029;color:#eef0f7;font:inherit;font-size:12px;padding:7px 10px;min-width:0}
+.ai-field input:focus-visible,.ai-field select:focus-visible{outline:2px solid #a376ef;outline-offset:1px}
+.ai-settings-hint{display:flex;align-items:flex-start;gap:8px;font-size:11px;line-height:1.5;color:#a3aec0;margin:0}
+.ai-settings-hint svg{flex:none;margin-top:2px;color:#bda3ec}
+.ai-toggle{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:10px 0;border-bottom:1px solid #ffffff0d;cursor:pointer}
+.ai-toggle>div{display:grid;gap:5px}
+.ai-toggle strong{font-size:12px}
+.ai-toggle small{font-size:11px;line-height:1.5;color:#a8b0c2}
+.ai-toggle input{width:18px;height:18px;accent-color:#9f73e8;flex:none}
+.ai-two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ai-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ai-metrics>div{display:grid;gap:6px;padding:13px;border-radius:9px;background:#1c2029}
+.ai-metrics strong{font-size:16px;overflow-wrap:anywhere}
+.ai-metrics small{font-size:10px;color:#a8b1c5}
+.ai-worker-status{display:flex;align-items:center;gap:9px;background:#1c2029;border-radius:9px;padding:12px;font-size:12px;flex-wrap:wrap}
+.ai-worker-status>span:last-child{margin-left:auto;color:#a4aec2}
+.ai-status-dot{width:9px;height:9px;flex:none;border-radius:50%;background:#cd8e67}
+.ai-status-dot.online{background:#53c699}
+.ai-settings-footer{display:flex;justify-content:flex-end;position:sticky;bottom:-32px;padding:14px 0;background:#20232c}
+.ai-save-button{display:inline-flex;align-items:center;gap:8px;background:#8053ca;border:1px solid #a379ea;color:#fff;font-weight:700;font-size:12px;border-radius:9px;padding:10px 17px;cursor:pointer}
+.ai-save-button:hover:not(:disabled){background:#9767dd}
+.ai-save-button:disabled{opacity:.5;cursor:not-allowed}
+.ai-settings-error,.ai-settings-success{border-radius:8px;padding:10px 13px;font-size:12px}
+.ai-settings-error{background:#652b39;color:#ffdce5}
+.ai-settings-success{background:#244737;color:#c8ffda}
+@media(max-width:760px){
+ .settings-modal-v2{width:100vw!important;max-width:100vw!important;max-height:100dvh!important;height:100dvh!important;border-radius:0!important}
+ .glassboard-settings-layout{grid-template-columns:1fr;display:flex;flex-direction:column;max-height:calc(100dvh - 90px)}
+ .glassboard-settings-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #383d4c;padding:8px}
+ .glassboard-settings-nav button{white-space:nowrap;min-width:max-content;width:auto;min-height:37px}
+ .glassboard-settings-content{padding:16px 12px 28px}
+ .ai-provider-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ai-two-col{grid-template-columns:1fr}
+ .ai-settings-section{padding:13px}
+ .ai-settings-intro h2{font-size:18px}
+ .ai-metrics{gap:5px}
+ .ai-metrics>div{padding:9px}
+ .ai-metrics strong{font-size:13px}
+}
