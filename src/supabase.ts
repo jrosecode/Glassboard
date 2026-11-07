@@ -11,7 +11,16 @@ export type AIChatMessage={id:string;user_id:string;board_id:string;role:'user'|
 export class SupabaseRepository {constructor(private db:SupabaseClient){ } 
  async aiChatMessages(boardId:string):Promise<AIChatMessage[]>{
   const {data,error}=await this.db.from('ai_chat_messages').select('id,user_id,board_id,role,content,status,error,provider,model_id,created_at').eq('board_id',boardId).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(200);
-  fail(error);return ((data??[]) as AIChatMessage[]).reverse();
+  fail(error);
+  // Each send inserts a user turn and a pending assistant reply in one
+  // transaction, so Postgres assigns both the same created_at timestamp.
+  // UUID order is random: always show the user turn before its AI reply.
+  return ((data??[]) as AIChatMessage[]).sort((a,b)=>{
+   const time=a.created_at.localeCompare(b.created_at);
+   if(time!==0)return time;
+   if(a.role!==b.role)return a.role==='user'?-1:1;
+   return a.id.localeCompare(b.id);
+  });
  }
  async aiChatGenerate(replyId:string):Promise<void>{
   const {data,error}=await this.db.functions.invoke('ai-chat',{body:{replyId}});
