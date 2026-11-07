@@ -1,7 +1,7 @@
 // Model-independent inference adapter. Provider endpoints are fixed and cannot be supplied by end users.
 const PROVIDERS={
  openai:{base:'https://api.openai.com/v1',key:'OPENAI_API_KEY',defaultModel:'gpt-4.1-mini'},
- moonshot:{base:'https://api.moonshot.ai/v1',key:'MOONSHOT_API_KEY',defaultModel:'kimi-k2.5'},
+ moonshot:{base:'https://api.moonshot.ai/v1',key:'MOONSHOT_API_KEY',defaultModel:'kimi-k3'},
  zai:{base:'https://api.z.ai/api/paas/v4',key:'ZAI_API_KEY',defaultModel:'glm-4.7'},
  openrouter:{base:'https://openrouter.ai/api/v1',key:'OPENROUTER_API_KEY',defaultModel:'openai/gpt-4.1-mini'},
  ollama:{base:'http://127.0.0.1:11434/v1',key:null,defaultModel:'llama3.2'},
@@ -19,7 +19,7 @@ export function resolveProvider(name,env=process.env){
  if(item.key&&!env[item.key])throw new Error(`Provider ${name} is not configured on this worker`);
  // Never accept arbitrary URLs from preferences. Private model URLs are server-managed only.
  const url=name==='ollama'?(env.OLLAMA_URL||'http://127.0.0.1:11434'):name==='lmstudio'?(env.LMSTUDIO_URL||'http://127.0.0.1:1234'):item.base;
- return {base:(name==='ollama'||name==='lmstudio'?url.replace(/\\/$/,'')+'/v1':url),key:item.key?env[item.key]:null,defaultModel:item.defaultModel};
+ return {base:(name==='ollama'||name==='lmstudio'?url.replace(/\/$/,'')+'/v1':url),key:item.key?env[item.key]:null,defaultModel:item.defaultModel};
 }
 async function responseBody(res){
  const raw=await res.text();
