@@ -4,7 +4,7 @@ import {DndContext,DragOverlay,MouseSensor,TouchSensor,KeyboardSensor,closestCen
 import {SortableContext,useSortable,verticalListSortingStrategy,horizontalListSortingStrategy,sortableKeyboardCoordinates} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
 import {motion,AnimatePresence} from 'framer-motion';
-import {Bell,Bot,CalendarDays,Check,ChevronDown,ChevronRight,Columns3,Inbox,LayoutDashboard,LogOut,Grid3X3,Plus,Search,Settings,Star,Table2,Trash2,Undo2,Redo2,MoreHorizontal,X,Clock3,Paperclip,Sparkles,Archive,Home,Layers3,Users,MessageCircle,} from 'lucide-react';
+import {Bell,Bot,CalendarDays,Check,ChevronDown,ChevronRight,Columns3,Inbox,LayoutDashboard,LogOut,Grid3X3,Plus,Search,Settings,Table2,Trash2,Undo2,Redo2,MoreHorizontal,X,Clock3,Paperclip,Sparkles,Archive,Home,Layers3,Users,MessageCircle,} from 'lucide-react';
 import {analytics,cardDropIntent,filterCards,moveCard,moveList,type Board,type Card,type List,type Priority,type View} from './domain';
 import {isConfigured,supabase,SupabaseRepository} from './supabase';
 import {ShareBoardModal,type BoardMember} from './sharing';
