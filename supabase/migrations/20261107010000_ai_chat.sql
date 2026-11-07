@@ -22,7 +22,7 @@ grant select,insert,update on public.ai_chat_messages to service_role;
 drop policy if exists ai_chat_self_read on public.ai_chat_messages;
 create policy ai_chat_self_read on public.ai_chat_messages for select to authenticated
  using(user_id=(select auth.uid()) and exists(
-  select 1 from public.boards b where b.id=board_id
+  select 1 from public.boards b where b.id=board_id and public.can_access_board(b.id)
  ));
 -- Authenticated users cannot write the table directly or forge assistant responses.
 create or replace function public.ai_chat_send(p_board_id uuid,p_content text)
@@ -34,7 +34,7 @@ declare
 begin
  if v_user is null then raise exception 'Sign in to use AI chat'; end if;
  if trim(coalesce(p_content,''))='' or length(p_content)>4000 then raise exception 'Message must be between 1 and 4000 characters'; end if;
- if not exists(select 1 from public.boards b where b.id=p_board_id) then raise exception 'Board is not accessible'; end if;
+ if not public.can_access_board(p_board_id) then raise exception 'Board is not accessible'; end if;
  -- Serialize message submissions per user and board. Avoid duplicate queued turns.
  perform pg_advisory_xact_lock(hashtextextended(v_user::text||':'||p_board_id::text,0));
  if exists(select 1 from public.ai_chat_messages where user_id=v_user and board_id=p_board_id
