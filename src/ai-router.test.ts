@@ -1,4 +1,5 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
+// @ts-expect-error Provider router is a deliberately JS-only Node worker module.
 import {resolveProvider,generate,generateWithFallback} from '../scripts/ai-provider-router.mjs';
 afterEach(()=>vi.unstubAllGlobals());
 describe('AI provider routing',()=>{
