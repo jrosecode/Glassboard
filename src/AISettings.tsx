@@ -20,8 +20,9 @@ export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:st
  const [health,setHealth]=useState<{workerOnline:boolean;queuedRuns:number;runningRuns:number}|null>(null);
  const [usage,setUsage]=useState<{runs:number;inputTokens:number;outputTokens:number;estimatedCostUsd:number}|null>(null);
  const [custom,setCustom]=useState(false);
+ const [keyInput,setKeyInput]=useState('');const [storedKeys,setStoredKeys]=useState<string[]>([]);const [keyBusy,setKeyBusy]=useState(false);
  useEffect(()=>{let active=true;if(!repo){setLoading(false);return}
-  void Promise.all([repo.getAISettings(userId),repo.aiWorkerHealth(),repo.aiMonthlyUsage()]).then(([saved,worker,metrics])=>{if(active){setSettings(saved);setHealth(worker);setUsage(metrics);setCustom(!providers.find(p=>p.value===saved.provider)?.models.includes(saved.model_id))}}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Could not load AI settings')}).finally(()=>{if(active)setLoading(false)});
+  void Promise.all([repo.getAISettings(userId),repo.aiWorkerHealth(),repo.aiMonthlyUsage(),repo.aiProviderKeys()]).then(([saved,worker,metrics,keys])=>{if(active){setSettings(saved);setHealth(worker);setUsage(metrics);setStoredKeys(keys);setCustom(!providers.find(p=>p.value===saved.provider)?.models.includes(saved.model_id))}}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Could not load AI settings')}).finally(()=>{if(active)setLoading(false)});
   return()=>{active=false};
  },[repo,userId]);
  const update=(patch:Partial<AISettingsData>)=>{setNotice('');setError('');setSettings(s=>({...s,...patch}))};
@@ -30,6 +31,8 @@ export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:st
   if(settings.local_only&&(!local(settings.provider)||settings.fallback_enabled&&!local(settings.fallback_provider)))throw new Error('Local-only processing requires a local model and no cloud fallback');
   await repo.saveAISettings(userId,settings);setNotice('AI settings saved. Future queued jobs will use these preferences.');
  }catch(e){setError(e instanceof Error?e.message:'Could not save AI settings')}finally{setBusy(false)}};
+ const storeKey=async()=>{if(!repo||!keyInput.trim())return;setKeyBusy(true);setError('');setNotice('');try{await repo.saveProviderKey(settings.provider,keyInput);setKeyInput('');setStoredKeys(await repo.aiProviderKeys());setNotice('API key saved securely in Supabase Vault. The key will not be displayed again.')}catch(e){setError(e instanceof Error?e.message:'Could not save API key')}finally{setKeyBusy(false)}};
+ const revokeKey=async()=>{if(!repo)return;setKeyBusy(true);setError('');setNotice('');try{await repo.revokeProviderKey(settings.provider);setStoredKeys(await repo.aiProviderKeys());setKeyInput('');setNotice('Provider key revoked.')}catch(e){setError(e instanceof Error?e.message:'Could not revoke API key')}finally{setKeyBusy(false)}};
  const current=providers.find(p=>p.value===settings.provider)!;
  return <div className="ai-settings">
   <div className="ai-settings-intro"><div className="ai-settings-icon"><Bot size={21}/></div><div><h2>AI Providers & Models</h2><p>Choose how Glassboard executes tasks. Models run on connected workers, not in your browser.</p></div></div>
@@ -38,7 +41,15 @@ export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:st
     <div className="ai-provider-grid">{providers.map(p=><button type="button" key={p.value} className={settings.provider===p.value?'ai-provider-option selected':'ai-provider-option'} aria-pressed={settings.provider===p.value} onClick={()=>pickProvider(p.value)}><strong>{p.label}</strong><small>{p.type}</small></button>)}</div>
     <div className="ai-field"><label htmlFor="ai-model">Model</label><select id="ai-model" value={custom?'__custom__':settings.model_id} onChange={e=>{if(e.target.value==='__custom__'){setCustom(true);update({model_id:''})}else{setCustom(false);update({model_id:e.target.value})}}}>{current.models.map(m=><option value={m} key={m}>{m}</option>)}{!current.models.includes(settings.model_id)&&!custom&&<option value={settings.model_id}>{settings.model_id}</option>}<option value="__custom__">Custom model ID…</option></select></div>
     {custom&&<div className="ai-field"><label htmlFor="ai-custom-model">Custom model ID</label><input id="ai-custom-model" autoComplete="off" maxLength={120} value={settings.model_id} placeholder="Model ID registered with this provider" onChange={e=>update({model_id:e.target.value})}/></div>}
-    <p className="ai-settings-hint"><KeyRound size={14}/>{current.hint} API keys must be configured on the worker and are never entered or stored here.</p>
+    <p className="ai-settings-hint"><KeyRound size={14}/>{current.hint} Cloud providers can use an encrypted account API key below or a key configured on the worker.</p>
+   </section>
+   <section className="ai-settings-section"><div className="ai-section-heading"><KeyRound size={17}/><div><h3>API connections</h3><p>Encrypted provider credentials stored in Supabase Vault. Glassboard never displays saved keys.</p></div></div>
+    {local(settings.provider)?<p className="ai-settings-hint"><HardDrive size={14}/>Local providers connect through a running worker on your own computer. API keys are not needed for these local connections.</p>:<>
+      <div className="ai-worker-status"><span className={storedKeys.includes(settings.provider)?'ai-status-dot online':'ai-status-dot'}/><strong>{storedKeys.includes(settings.provider)?'Account key saved':'No account key saved'}</strong><span>{current.label}</span></div>
+      <div className="ai-field"><label htmlFor="ai-api-key">API key for {current.label}</label><input id="ai-api-key" type="password" autoComplete="new-password" spellCheck={false} value={keyInput} onChange={e=>setKeyInput(e.target.value)} placeholder="Paste new key (never shown after saving)" maxLength={512}/></div>
+      <div className="ai-key-actions"><button type="button" disabled={keyBusy||keyInput.trim().length<10} onClick={()=>void storeKey()}>{keyBusy?'Updating…':'Save encrypted key'}</button>{storedKeys.includes(settings.provider)&&<button type="button" disabled={keyBusy} onClick={()=>void revokeKey()}>Revoke saved key</button>}</div>
+      <p className="ai-settings-hint"><ShieldCheck size={14}/>Only the private worker can retrieve your key for an authorized job. Changing providers does not delete existing saved credentials.</p>
+     </>}
    </section>
    <section className="ai-settings-section"><div className="ai-section-heading"><RefreshCw size={17}/><div><h3>Reliability & fallback</h3><p>Choose what happens when your primary model is unavailable.</p></div></div>
     <label className="ai-toggle"><div><strong>Automatic fallback</strong><small>Retry with an approved backup provider if the primary call fails.</small></div><input type="checkbox" checked={settings.fallback_enabled} disabled={settings.local_only} onChange={e=>update({fallback_enabled:e.target.checked})}/></label>
