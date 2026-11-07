@@ -62,7 +62,13 @@ Deno.serve(async req=>{
   }else{
    response=await fetch(cfg.endpoint,{method:"POST",signal:AbortSignal.timeout(55000),headers:{"authorization":"Bearer "+apiKey,"content-type":"application/json"},body:JSON.stringify({model,messages:[{role:"user",content:prompt}],temperature:0.2})});
   }
-  if(!response.ok)throw Error("AI provider returned HTTP "+response.status);
+  if(!response.ok){
+   if(response.status===401||response.status===403)throw Error("NVIDIA or selected provider rejected the API key (HTTP "+response.status+"). Rotate the key and save it under Settings → AI Providers & Models → API connections.");
+   if(response.status===410||response.status===404)throw Error("Model unavailable or discontinued (HTTP "+response.status+"). Select a currently available model in AI Settings.");
+   if(response.status===402)throw Error("Provider account has insufficient credits (HTTP 402).");
+   if(response.status===429)throw Error("Provider rate limit reached (HTTP 429). Try again later.");
+   throw Error("AI provider request failed (HTTP "+response.status+"). Check the model and provider account.");
+  }
   const data=await response.json();
   const text=provider==="anthropic"?(data.content||[]).filter((v:{type:string})=>v.type==="text").map((v:{text:string})=>v.text).join(""):data.choices?.[0]?.message?.content;
   if(typeof text!=="string"||!text.trim())throw Error("AI provider returned no text");
