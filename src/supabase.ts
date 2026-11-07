@@ -21,6 +21,20 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
   const {data,error}=await this.db.rpc('ai_monthly_usage');fail(error);
   return {runs:Number(data?.runs??0),inputTokens:Number(data?.inputTokens??0),outputTokens:Number(data?.outputTokens??0),estimatedCostUsd:Number(data?.estimatedCostUsd??0)};
  }
+ async aiProviderKeys():Promise<string[]>{
+  const {data,error}=await this.db.from('ai_provider_credentials').select('provider');
+  fail(error);
+  return (data??[]).map((r:{provider:string})=>r.provider);
+ }
+ async saveProviderKey(provider:AIProvider,key:string):Promise<void>{
+  if(!['openai','moonshot','zai','openrouter','anthropic'].includes(provider))throw new Error('Cloud provider required');
+  const {error}=await this.db.rpc('ai_save_provider_key',{p_provider:provider,p_key:key});
+  fail(error);
+ }
+ async revokeProviderKey(provider:AIProvider):Promise<void>{
+  const {error}=await this.db.rpc('ai_revoke_provider_key',{p_provider:provider});
+  fail(error);
+ }
  async aiWorkerHealth():Promise<{workerOnline:boolean;queuedRuns:number;runningRuns:number}>{
   const {data,error}=await this.db.rpc('agent_runtime_health');fail(error);
   return {workerOnline:Boolean(data?.workerOnline),queuedRuns:Number(data?.queuedRuns??0),runningRuns:Number(data?.runningRuns??0)};
