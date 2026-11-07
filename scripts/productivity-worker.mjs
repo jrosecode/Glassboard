@@ -21,7 +21,7 @@ async function checkModel(){
  if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
  const endpoints=[
   {name:'Ollama',url:`${OLLAMA_URL}/api/tags`,modelsKey:'models'},
-  {name:'LM Studio',url:`${(process.env.LMSTUDIO_URL||'http://127.0.0.1:1234').replace(/\\/$/,'')}/v1/models`,modelsKey:'data'}
+  {name:'LM Studio',url:`${(process.env.LMSTUDIO_URL||'http://127.0.0.1:1234').replace(/[/]$/,'')}/v1/models`,modelsKey:'data'}
  ];
  for(const endpoint of endpoints){
   try{
