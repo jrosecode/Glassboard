@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {randomUUID} from 'node:crypto';
+import {generateWithFallback,providerAvailable} from './ai-provider-router.mjs';
 /* global process, console, fetch, setTimeout, setInterval, clearInterval */
 const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY'];
 for(const key of required)if(!process.env[key]){console.error(`Missing ${key}`);process.exit(2)}
@@ -16,6 +17,7 @@ const MODEL_CHECK_MS=30000;
 let modelCheckedAt=0,modelAvailable=false,reportedAt=0,reportedStatus='';
 async function checkModel(){
  if(Date.now()-modelCheckedAt<MODEL_CHECK_MS)return modelAvailable;
+ if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
  modelCheckedAt=Date.now();
  try{
   const response=await fetch(`${OLLAMA_URL}/api/tags`,{signal:AbortSignal.timeout(5000)});
@@ -36,8 +38,59 @@ async function heartbeat(status){
 }
 
 async function rpc(name,body={}){const response=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers,body:JSON.stringify(body)});if(!response.ok)throw new Error(`${name}: ${response.status} ${await response.text()}`);const text=await response.text();return text?JSON.parse(text):null}
-async function ollama(prompt,json=false){const response=await fetch(`${OLLAMA_URL}/api/generate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,prompt,stream:false,format:json?'json':undefined})});if(!response.ok)throw new Error(`Ollama: ${response.status} ${await response.text()}`);const result=await response.json();return result.response}
-async function processWork(work,workerId){const heartbeat=setInterval(()=>void rpc('renew_productivity_lease',{p_kind:work.kind,p_id:work.id,p_worker_id:workerId}).catch(error=>console.error('Lease renewal failed',error)),60000);try{if(work.kind==='agent'){const response=await ollama(`Complete this Glassboard card safely. Return concise JSON with summary and suggestedChanges.\n${JSON.stringify(work.input)}`,true);await rpc('complete_agent_run',{p_run_id:work.id,p_result:JSON.parse(response),p_worker_id:workerId})}else{const response=await ollama(`Create a Glassboard plan as JSON: {"title":string,"lists":[{"title":string,"cards":[{"title":string,"priority":"low|medium|high|urgent","description":string}]}]}.\nPrompt: ${work.prompt}`,true);await rpc('complete_planning_request',{p_request_id:work.id,p_proposal:JSON.parse(response),p_model:MODEL,p_worker_id:workerId})}}catch(error){await rpc('fail_productivity_work',{p_kind:work.kind,p_id:work.id,p_error:String(error instanceof Error?error.message:error).slice(0,2000),p_worker_id:workerId});throw error}finally{clearInterval(heartbeat)}}
+async function tableGet(table,filter,select='*'){
+ const url=new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+ url.searchParams.set('select',select);
+ for(const [key,value] of Object.entries(filter))url.searchParams.set(key,'eq.'+String(value));
+ const response=await fetch(url,{headers,signal:AbortSignal.timeout(12000)});
+ if(!response.ok)throw new Error(`Cannot load ${table}: ${response.status}`);
+ return (await response.json())[0]||null;
+}
+async function tablePost(table,payload){
+ const response=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{...headers,Prefer:'return=minimal'},body:JSON.stringify(payload),signal:AbortSignal.timeout(12000)});
+ if(!response.ok)throw new Error(`Cannot record ${table}: ${response.status}`);
+}
+async function userSettings(kind,runId){
+ const record=await tableGet(kind==='agent'?'agent_runs':'planning_requests',{id:runId},'requested_by');
+ if(!record?.requested_by)throw new Error('Queued job is missing its requester');
+ const settings=await tableGet('ai_user_settings',{user_id:record.requested_by});
+ return {userId:record.requested_by,settings:settings||{
+  provider:process.env.AI_DEFAULT_PROVIDER||'ollama',
+  model_id:process.env.AI_DEFAULT_MODEL||MODEL,
+  fallback_enabled:false,fallback_provider:'openai',fallback_model:'gpt-4.1-mini',
+  local_only:false,max_monthly_runs:100,max_run_steps:6
+ }};
+}
+async function usageThisMonth(userId){
+ const start=new Date();start.setUTCDate(1);start.setUTCHours(0,0,0,0);
+ const url=new URL(`${SUPABASE_URL}/rest/v1/ai_usage_events`);
+ url.searchParams.set('select','id');url.searchParams.set('user_id','eq.'+userId);
+ url.searchParams.set('created_at','gte.'+start.toISOString());
+ const response=await fetch(url,{headers:{...headers,Prefer:'count=exact'},signal:AbortSignal.timeout(12000)});
+ if(!response.ok)throw new Error('Cannot verify monthly AI budget');
+ return Number(response.headers.get('content-range')?.split('/')[1]||0);
+}
+async function processWork(work,workerId){
+ const lease=setInterval(()=>void rpc('renew_productivity_lease',{p_kind:work.kind,p_id:work.id,p_worker_id:workerId}).catch(error=>console.error('Lease renewal failed',error)),60000);
+ try{
+  const {userId,settings}=await userSettings(work.kind,work.id);
+  if(await usageThisMonth(userId)>=settings.max_monthly_runs)throw new Error('Monthly AI task allowance reached');
+  const prompt=work.kind==='agent'
+   ?`Complete this Glassboard card safely. Return concise JSON with summary and suggestedChanges. You cannot directly execute external actions.\\n${JSON.stringify(work.input)}`
+   :`Create a Glassboard plan as JSON: {"title":string,"lists":[{"title":string,"cards":[{"title":string,"priority":"low|medium|high|urgent","description":string}]}]}.\\nPrompt: ${work.prompt}`;
+  const result=await generateWithFallback({settings,prompt,json:true,signal:AbortSignal.timeout(180000)});
+  // Count actual model usage, not an estimated fixed credit amount.
+  await tablePost('ai_usage_events',{run_id:work.kind==='agent'?work.id:null,user_id:userId,provider:result.provider,model_id:result.model,input_tokens:result.inputTokens,output_tokens:result.outputTokens,duration_ms:result.durationMs,success:true});
+  let parsed;
+  try{parsed=JSON.parse(result.text)}catch{throw new Error('AI provider response is not valid JSON')}
+  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('AI provider returned an invalid proposal');
+  if(work.kind==='agent')await rpc('complete_agent_run',{p_run_id:work.id,p_result:parsed,p_worker_id:workerId});
+  else await rpc('complete_planning_request',{p_request_id:work.id,p_proposal:parsed,p_model:result.model,p_worker_id:workerId});
+ }catch(error){
+  await rpc('fail_productivity_work',{p_kind:work.kind,p_id:work.id,p_error:String(error instanceof Error?error.message:error).slice(0,2000),p_worker_id:workerId});
+  throw error;
+ }finally{clearInterval(lease)}
+}
 async function processEmail(job,workerId){const heartbeat=setInterval(()=>void rpc('renew_email_reminder_lease',{p_queue_id:job.id,p_worker_id:workerId}).catch(error=>console.error('Lease renewal failed',error)),60000);try{if(!EMAIL_DELIVERY_URL)throw new Error('EMAIL_DELIVERY_URL is not configured');await rpc('renew_email_reminder_lease',{p_queue_id:job.id,p_worker_id:workerId});const authorized=await rpc('authorize_email_reminder_delivery',{p_queue_id:job.id,p_worker_id:workerId});if(!authorized)return;const payload={recipientEmail:authorized.recipientEmail,cardTitle:authorized.cardTitle,remindAt:authorized.remindAt,cardId:authorized.cardId};const response=await fetch(EMAIL_DELIVERY_URL,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':job.id},body:JSON.stringify(payload)});if(!response.ok)throw new Error(`Email delivery: ${response.status} ${await response.text()}`);await rpc('complete_email_reminder',{p_queue_id:job.id,p_worker_id:workerId})}catch(error){await rpc('fail_email_reminder',{p_queue_id:job.id,p_error:String(error instanceof Error?error.message:error).slice(0,2000),p_worker_id:workerId});throw error}finally{clearInterval(heartbeat)}}
 async function tick(){const workerId=WORKER_ID;await rpc('enqueue_due_reminders',{});await rpc('generate_recurring_cards',{});const ready=await checkModel();await heartbeat(ready?'ready':'unavailable');const work=ready?await rpc('claim_productivity_work',{p_worker_id:workerId}):null;if(work){await processWork(work,workerId);return true}const email=await rpc('claim_email_reminder',{p_worker_id:workerId});if(email){await processEmail(email,workerId);return true}return false}
 while(true){try{const worked=await tick();if(ONCE)break;if(!worked)await new Promise(resolve=>setTimeout(resolve,POLL_MS))}catch(error){console.error(error);if(ONCE)process.exitCode=1;else await new Promise(resolve=>setTimeout(resolve,POLL_MS));if(ONCE)break}}
