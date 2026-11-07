@@ -7,7 +7,7 @@ const providers:{value:AIProvider;label:string;type:string;hint:string;models:st
  {value:'ollama',label:'Ollama',type:'Local',hint:'Runs on a connected worker computer with Ollama. No public port required.',models:['llama3.2','qwen3:4b','qwen3:8b']},
  {value:'lmstudio',label:'LM Studio',type:'Local',hint:'Runs on a connected worker computer with the LM Studio server.',models:['local-model']},
  {value:'openai',label:'OpenAI',type:'Cloud API',hint:'Requires OPENAI_API_KEY on the private worker.',models:['gpt-4.1-mini','gpt-4.1']},
- {value:'moonshot',label:'Moonshot / Kimi',type:'Cloud API',hint:'Requires MOONSHOT_API_KEY on the private worker.',models:['kimi-k2.5','kimi-k2-thinking']},
+ {value:'moonshot',label:'Moonshot / Kimi',type:'Cloud API',hint:'Requires MOONSHOT_API_KEY on the private worker.',models:['kimi-k3','kimi-k2.6']},
  {value:'zai',label:'Z.ai / GLM',type:'Cloud API',hint:'Requires ZAI_API_KEY on the private worker.',models:['glm-4.7','glm-4.5']},
  {value:'openrouter',label:'OpenRouter',type:'Cloud API',hint:'Requires OPENROUTER_API_KEY on the private worker.',models:['openai/gpt-4.1-mini','anthropic/claude-sonnet-4.5']},
  {value:'anthropic',label:'Anthropic',type:'Cloud API',hint:'Requires ANTHROPIC_API_KEY on the private worker.',models:['claude-sonnet-4-5']}
