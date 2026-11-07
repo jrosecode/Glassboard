@@ -189,3 +189,62 @@
  .ai-chat-header{padding:12px 14px}
 }
 @media(prefers-reduced-motion:reduce){.ai-chat-pending svg{animation:none}}
+
+/* Mobile card editor lives outside the clipped Kanban list.
+   Keep the editor above the software keyboard using visualViewport inset. */
+@media (max-width:650px) {
+  .mobile-card-composer {
+    position:fixed;
+    z-index:1100;
+    box-sizing:border-box;
+    left:10px;
+    right:10px;
+    bottom:calc(var(--glassboard-keyboard-inset,0px) + 10px);
+    width:auto;
+    max-height:min(260px,calc(100dvh - var(--glassboard-keyboard-inset,0px) - 30px));
+    overflow-y:auto;
+    display:grid;
+    gap:9px;
+    padding:13px;
+    margin:0;
+    border:1px solid #555b6c;
+    border-radius:17px;
+    background:#282b36;
+    color:#eef0f7;
+    box-shadow:0 15px 55px rgba(0,0,0,.42);
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  .mobile-card-composer textarea {
+    display:block;
+    box-sizing:border-box;
+    width:100%;
+    min-width:0;
+    min-height:75px;
+    max-height:145px;
+    padding:12px 13px;
+    font:inherit;
+    font-size:16px;
+    line-height:1.5;
+    color:#111318;
+    border:1px solid #aeb4c1;
+    border-radius:10px;
+    background:#e7e9ed;
+    resize:vertical;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+  }
+  .mobile-card-composer textarea::placeholder{color:#68717f}
+  .mobile-card-composer textarea:focus-visible{outline:2px solid #9261f3;outline-offset:1px}
+  .mobile-card-composer>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mobile-card-composer .glass-button{
+    min-height:38px;
+    border:1px solid #62577f;
+    border-radius:10px;
+    padding:8px 12px;
+    background:#443369;
+    color:#f7f2ff;
+    cursor:pointer;
+  }
+  .mobile-card-composer .glass-button[aria-label="Cancel"]{display:grid;place-items:center;padding:8px}
+}
