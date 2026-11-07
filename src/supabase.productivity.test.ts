@@ -1,6 +1,24 @@
 import {describe,expect,it,vi} from 'vitest';
 import {SupabaseRepository} from './supabase';
 describe('productivity repository boundary',()=>{
+ it('orders user messages before the typing bubble when timestamps match',async()=>{
+  const stamp='2026-11-07T06:08:41.852552+00:00';
+  const rows=[
+   {id:'1',role:'assistant',created_at:stamp,status:'queued',content:''},
+   {id:'z',role:'user',created_at:stamp,status:'done',content:'Hi'},
+   {id:'x',role:'assistant',created_at:'2026-11-07T06:07:00+00:00',status:'done',content:'Hello'}
+  ];
+  const limit=vi.fn().mockResolvedValue({data:rows,error:null});
+  const order=vi.fn().mockReturnValueOnce({order:vi.fn(()=>({limit}))});
+  const eq=vi.fn(()=>({order}));
+  const select=vi.fn(()=>({eq}));
+  const from=vi.fn(()=>({select}));
+  const repo=new SupabaseRepository({from} as never);
+  const messages=await repo.aiChatMessages('board');
+  expect(messages.map(item=>item.role)).toEqual(['assistant','user','assistant']);
+  expect(messages.at(-1)?.status).toBe('queued');
+ });
+
  it('queues AI work through the transactional RPC',async()=>{const rpc=vi.fn().mockResolvedValue({data:{listId:'ai',runId:'run',status:'queued'},error:null});const repo=new SupabaseRepository({rpc} as never);expect(await repo.queueCardForAi('card','key')).toMatchObject({status:'queued'});expect(rpc).toHaveBeenCalledWith('queue_card_for_ai',{p_card_id:'card',p_idempotency_key:'key'})});
  it('reads and marks normalized notifications',async()=>{const order=vi.fn().mockResolvedValue({data:[{id:'n',read_at:null}],error:null});const eq=vi.fn(()=>({order}));const select=vi.fn(()=>({eq}));const from=vi.fn(()=>({select}));const rpc=vi.fn().mockResolvedValue({data:null,error:null});const repo=new SupabaseRepository({from,rpc} as never);expect(await repo.notifications()).toHaveLength(1);await repo.markAllNotificationsRead();expect(rpc).toHaveBeenCalledWith('mark_all_notifications_read')});
  it('creates planning requests only through the narrow RPC',async()=>{const rpc=vi.fn().mockResolvedValue({data:{id:'p',status:'queued'},error:null});const repo=new SupabaseRepository({rpc} as never);await repo.createPlanningRequest('board','Plan this','idem');expect(rpc).toHaveBeenCalledWith('create_planning_request',{p_board_id:'board',p_prompt:'Plan this',p_idempotency_key:'idem',p_model:null})});
