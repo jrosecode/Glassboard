@@ -1,6 +1,6 @@
-/* Glassboard reference-inspired surface refresh.
-   Existing palette, behavior, and accessibility semantics are preserved.
-   This layer intentionally loads after index.css and productivity.css. */
+/* Reference-inspired layout refinements only.
+   Glassboard's existing card appearance, typography, text colors,
+   theme palette, and interactive behavior are intentionally untouched. */
 @media (min-width: 901px) {
   .neon-app {
     padding-top: 114px;
@@ -14,17 +14,17 @@
     height: 68px;
     padding: 7px 12px;
     gap: 12px;
-    border: 1px solid rgba(180, 168, 209, .14);
+    border: 1px solid rgba(180,168,209,.14);
     border-radius: 24px;
-    background: rgba(37, 37, 48, .82);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, .17), inset 0 1px rgba(255,255,255,.05);
+    background: rgba(37,37,48,.82);
+    box-shadow: 0 14px 36px rgba(0,0,0,.17), inset 0 1px rgba(255,255,255,.05);
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
   }
   .neon-app .search {
     height: 46px;
     border-width: 1px;
-    border-color: rgba(153, 109, 225, .42);
+    border-color: rgba(153,109,225,.42);
     box-shadow: none;
     background: rgba(255,255,255,.045);
   }
@@ -35,89 +35,11 @@
   margin-bottom: 17px;
   gap: 14px;
 }
-.neon-app .board-title h1,
-.neon-app .board-head h1 {
-  font-size: clamp(24px, 2.3vw, 34px);
-  font-weight: 720;
-  letter-spacing: -.045em;
-  line-height: 1.13;
-}
-.neon-app .board-grid {
-  gap: 16px;
-  scrollbar-width: thin;
-}
-.neon-app .sortable-list > .list {
-  border: 1px solid rgba(190, 184, 210, .12);
-  border-radius: 23px;
-  background: linear-gradient(155deg, rgba(255,255,255,.045), rgba(255,255,255,.005)), #282b36;
-  box-shadow: 0 13px 32px rgba(0,0,0,.13), inset 0 1px rgba(255,255,255,.035);
-}
-.neon-app .list-header {padding: 1px 1px 6px;}
-.neon-app .task-card {
-  border-width: 1px;
-  border-color: rgba(188, 186, 211, .16);
-  border-radius: 16px;
-  background: linear-gradient(142deg, rgba(255,255,255,.055), rgba(255,255,255,.012)), #20222d;
-  box-shadow: 0 5px 14px rgba(0,0,0,.14), inset 0 1px rgba(255,255,255,.035);
-  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-}
-.neon-app .task-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(164, 130, 220, .44);
-  box-shadow: 0 11px 24px rgba(0,0,0,.23), 0 0 0 1px rgba(164,130,220,.07);
-}
-.neon-app .card-open {min-height: 0; padding: 14px 14px 13px !important; gap: 9px;}
-.neon-app .task-card h3 {font-size: 13px; line-height: 1.48;}
-.neon-app .glass-button, .neon-app .board-actions select {
-  border-radius: 999px;
-  transition: background .18s ease, border-color .18s ease, transform .18s ease;
-}
-.neon-app .glass-button:active {transform: scale(.97);}
-.neon-app .glass-panel:not(.list) {
-  border-radius: 22px;
-  border-color: rgba(190,184,210,.12);
-  box-shadow: 0 12px 32px rgba(0,0,0,.12);
-}
-.neon-app .dashboard {gap: 16px;}
-.neon-app .dashboard .glass-card,
-.neon-app .dashboard .glass-panel {
-  border-radius: 23px;
-  border: 1px solid rgba(190,184,210,.13);
-  box-shadow: 0 12px 32px rgba(0,0,0,.12);
-}
-.neon-app .dashboard strong {
-  font-size: clamp(30px,3vw,43px);
-  line-height: 1.15;
-  letter-spacing: -.04em;
-}
-.neon-app .glass-modal {
-  border-radius: 25px;
-  box-shadow: 0 32px 96px rgba(0,0,0,.5);
-}
-.neon-app .glass-modal input,
-.neon-app .glass-modal select,
-.neon-app .glass-modal textarea {border-radius: 12px;}
-.neon-app :is(button,a,input,select,textarea):focus-visible {
-  outline: 2px solid #a376ef;
-  outline-offset: 3px;
-}
-.productivity-overlay {
-  border-radius: 24px;
-  box-shadow: 0 30px 85px rgba(0,0,0,.34);
-}
+.neon-app .board-grid {gap: 16px; scrollbar-width: thin;}
+.productivity-overlay {border-radius: 24px;}
 .productivity-nav {border-radius: 18px;}
-.product-list {border-radius: 21px; box-shadow: 0 10px 24px rgba(0,0,0,.1);}
-.minimal-card {border-radius: 15px; transition: transform .18s ease, border-color .18s ease;}
-@media (hover:hover) {.minimal-card:hover {transform: translateY(-1px); border-color: rgba(165,125,231,.3);}}
-/* Respect existing compact card interactions and existing mobile layout. */
 @media (max-width: 900px) {
   .neon-app .board-head {padding-bottom: 12px; margin-bottom: 10px;}
-  .neon-app .board-title h1,.neon-app .board-head h1 {font-size: 23px;}
   .neon-app .board-grid {gap: 10px;}
-  .neon-app .sortable-list > .list {border-radius: 18px;}
-  .neon-app .task-card {border-radius: 14px;}
   .productivity-overlay {border-radius: 18px 18px 0 0;}
-}
-@media (prefers-reduced-motion: reduce) {
-  .neon-app .task-card,.minimal-card,.neon-app .glass-button {transition:none!important;transform:none!important;}
 }
