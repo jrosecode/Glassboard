@@ -11,6 +11,8 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
  const [settings,setSettings]=useState<AISettingsData|null>(null);
  const bottomRef=useRef<HTMLDivElement>(null);
  const busy=messages.some(m=>m.role==='assistant'&&(m.status==='queued'||m.status==='running'));
+ const providerMissing=Boolean(settings&&(settings.provider==='ollama'||settings.provider==='lmstudio'));
+ const modelLooksLikeKey=Boolean(settings&&/^(nvapi-|sk-|sk_|AIza|ghp_|glpat-|hf_)/i.test(settings.model_id));
  useEffect(()=>{
   let alive=true;
   setMessages([]);setError('');setLoading(true);setSettings(null);
@@ -18,7 +20,7 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
   const refresh=async()=>{
    try{
     const [items,options]=await Promise.all([repo.aiChatMessages(boardId),repo.getAISettings(userId)]);
-    if(alive){setMessages(items);setSettings(options);setError('')}
+    if(alive){setMessages(items);setSettings(options)}
    }catch(cause){if(alive)setError(cause instanceof Error?cause.message:'Unable to load chat')}
    finally{if(alive)setLoading(false)}
   };
@@ -30,7 +32,7 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
  const send=async(event:FormEvent)=>{
   event.preventDefault();
   const text=draft.trim();
-  if(!repo||!text||sending||busy)return;
+  if(!repo||!text||sending||busy||providerMissing||modelLooksLikeKey)return;
   setSending(true);setError('');
   try{
    const replyId=await repo.aiChatSend(boardId,text);
@@ -63,11 +65,13 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
     <div ref={bottomRef}/>
    </div>
    <form className="ai-chat-composer" onSubmit={send}>
+    {providerMissing&&<p role="alert" className="ai-chat-error">A local model requires an online AI worker. Select a cloud provider in AI Settings to chat directly.</p>}
+    {modelLooksLikeKey&&<p role="alert" className="ai-chat-error">An API key was entered as the model name. Change the model in AI Settings and save a newly rotated key under API connections.</p>}
     {error&&<p role="alert" className="ai-chat-error">{error}</p>}
     {!repo&&<p className="ai-chat-error">Connect Supabase to chat with your AI model.</p>}
     <div className="ai-chat-compose-row">
-     <textarea aria-label="Message AI" placeholder="Ask your AI anything…" rows={2} maxLength={4000} value={draft} disabled={!repo||sending||busy} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.currentTarget.form?.requestSubmit()}}}/>
-     <button type="submit" aria-label="Send message" title="Send message" disabled={!repo||!draft.trim()||sending||busy}><Send size={19}/></button>
+     <textarea aria-label="Message AI" placeholder="Ask your AI anything…" rows={2} maxLength={4000} value={draft} disabled={!repo||sending||busy||providerMissing||modelLooksLikeKey} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.currentTarget.form?.requestSubmit()}}}/>
+     <button type="submit" aria-label="Send message" title="Send message" disabled={!repo||!draft.trim()||sending||busy||providerMissing||modelLooksLikeKey}><Send size={19}/></button>
     </div>
     <small>{busy?'Wait for the current reply before sending another message.':'Enter to send · Shift+Enter for a new line'}</small>
    </form>
