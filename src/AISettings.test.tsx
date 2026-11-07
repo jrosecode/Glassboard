@@ -39,7 +39,7 @@ describe('AI Providers & Models settings',()=>{
   repo.aiProviderKeys.mockResolvedValueOnce([]).mockResolvedValueOnce(['moonshot']).mockResolvedValueOnce([]);
   render(<AISettings repo={repo as never} userId="user-1"/>);
   await screen.findByRole('heading',{name:'AI Providers & Models'});
-  await user.click(screen.getByRole('button',{name:/Moonshot \\/ Kimi/}));
+  await user.click(screen.getByRole('button',{name:/Moonshot/}));
   await user.type(screen.getByLabelText('API key for Moonshot / Kimi'),'sk-test-do-not-store-in-state');
   await user.click(screen.getByRole('button',{name:'Save encrypted key'}));
   await waitFor(()=>expect(repo.saveProviderKey).toHaveBeenCalledWith('moonshot','sk-test-do-not-store-in-state'));
