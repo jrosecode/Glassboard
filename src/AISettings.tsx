@@ -10,7 +10,8 @@ const providers:{value:AIProvider;label:string;type:string;hint:string;models:st
  {value:'moonshot',label:'Moonshot / Kimi',type:'Cloud API',hint:'Requires MOONSHOT_API_KEY on the private worker.',models:['kimi-k3','kimi-k2.6']},
  {value:'zai',label:'Z.ai / GLM',type:'Cloud API',hint:'Requires ZAI_API_KEY on the private worker.',models:['glm-4.7','glm-4.5']},
  {value:'openrouter',label:'OpenRouter',type:'Cloud API',hint:'Requires OPENROUTER_API_KEY on the private worker.',models:['openai/gpt-4.1-mini','anthropic/claude-sonnet-4.5']},
- {value:'anthropic',label:'Anthropic',type:'Cloud API',hint:'Requires ANTHROPIC_API_KEY on the private worker.',models:['claude-sonnet-4-5']}
+ {value:'anthropic',label:'Anthropic',type:'Cloud API',hint:'Requires ANTHROPIC_API_KEY on the private worker.',models:['claude-sonnet-4-5']},
+ {value:'nvidia',label:'NVIDIA NIM',type:'Cloud API',hint:'Use an NVIDIA API key from build.nvidia.com. No local worker needed for cloud chat.',models:['meta/llama-3.1-70b-instruct','mistralai/mistral-large-3-675b-instruct-2512']}
 ];
 const local=(p:AIProvider)=>p==='ollama'||p==='lmstudio';
 export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:string}){
@@ -35,7 +36,7 @@ export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:st
  const revokeKey=async()=>{if(!repo)return;setKeyBusy(true);setError('');setNotice('');try{await repo.revokeProviderKey(settings.provider);setStoredKeys(await repo.aiProviderKeys());setKeyInput('');setNotice('Provider key revoked.')}catch(e){setError(e instanceof Error?e.message:'Could not revoke API key')}finally{setKeyBusy(false)}};
  const current=providers.find(p=>p.value===settings.provider)!;
  return <div className="ai-settings">
-  <div className="ai-settings-intro"><div className="ai-settings-icon"><Bot size={21}/></div><div><h2>AI Providers & Models</h2><p>Choose how Glassboard executes tasks. Models run on connected workers, not in your browser.</p></div></div>
+  <div className="ai-settings-intro"><div className="ai-settings-icon"><Bot size={21}/></div><div><h2>AI Providers & Models</h2><p>Choose how Glassboard executes tasks. Cloud chat runs securely through Supabase; local models and AI tasks need a connected worker.</p></div></div>
   {loading?<p role="status">Loading AI configuration…</p>:<>
    <section className="ai-settings-section"><div className="ai-section-heading"><Cloud size={17}/><div><h3>Primary provider</h3><p>Which AI system should run your queued cards?</p></div></div>
     <div className="ai-provider-grid">{providers.map(p=><button type="button" key={p.value} className={settings.provider===p.value?'ai-provider-option selected':'ai-provider-option'} aria-pressed={settings.provider===p.value} onClick={()=>pickProvider(p.value)}><strong>{p.label}</strong><small>{p.type}</small></button>)}</div>
@@ -48,7 +49,7 @@ export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:st
       <div className="ai-worker-status"><span className={storedKeys.includes(settings.provider)?'ai-status-dot online':'ai-status-dot'}/><strong>{storedKeys.includes(settings.provider)?'Account key saved':'No account key saved'}</strong><span>{current.label}</span></div>
       <div className="ai-field"><label htmlFor="ai-api-key">API key for {current.label}</label><input id="ai-api-key" type="password" autoComplete="new-password" spellCheck={false} value={keyInput} onChange={e=>setKeyInput(e.target.value)} placeholder="Paste new key (never shown after saving)" maxLength={512}/></div>
       <div className="ai-key-actions"><button type="button" disabled={keyBusy||keyInput.trim().length<10} onClick={()=>void storeKey()}>{keyBusy?'Updating…':'Save encrypted key'}</button>{storedKeys.includes(settings.provider)&&<button type="button" disabled={keyBusy} onClick={()=>void revokeKey()}>Revoke saved key</button>}</div>
-      <p className="ai-settings-hint"><ShieldCheck size={14}/>Only the private worker can retrieve your key for an authorized job. Changing providers does not delete existing saved credentials.</p>
+      <p className="ai-settings-hint"><ShieldCheck size={14}/>Only trusted backend services can retrieve your key for an authorized job. Changing providers does not delete existing saved credentials.</p>
      </>}
    </section>
    <section className="ai-settings-section"><div className="ai-section-heading"><RefreshCw size={17}/><div><h3>Reliability & fallback</h3><p>Choose what happens when your primary model is unavailable.</p></div></div>
