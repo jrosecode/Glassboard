@@ -11,7 +11,7 @@ const providers:{value:AIProvider;label:string;type:string;hint:string;models:st
  {value:'zai',label:'Z.ai / GLM',type:'Cloud API',hint:'Requires ZAI_API_KEY on the private worker.',models:['glm-4.7','glm-4.5']},
  {value:'openrouter',label:'OpenRouter',type:'Cloud API',hint:'Requires OPENROUTER_API_KEY on the private worker.',models:['openai/gpt-4.1-mini','anthropic/claude-sonnet-4.5']},
  {value:'anthropic',label:'Anthropic',type:'Cloud API',hint:'Requires ANTHROPIC_API_KEY on the private worker.',models:['claude-sonnet-4-5']},
- {value:'nvidia',label:'NVIDIA NIM',type:'Cloud API',hint:'Use an NVIDIA API key from build.nvidia.com. No local worker needed for cloud chat.',models:['meta/llama-3.1-70b-instruct','mistralai/mistral-large-3-675b-instruct-2512']}
+ {value:'nvidia',label:'NVIDIA NIM',type:'Cloud API',hint:'Use an NVIDIA API key from build.nvidia.com. Cloud chat needs no local worker; model availability may change.',models:['mistralai/mistral-large-4-1t-a52b']}
 ];
 const local=(p:AIProvider)=>p==='ollama'||p==='lmstudio';
 export function AISettings({repo,userId}:{repo:SupabaseRepository|null;userId:string}){
