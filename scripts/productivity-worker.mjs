@@ -18,7 +18,7 @@ let modelCheckedAt=0,modelAvailable=false,reportedAt=0,reportedStatus='';
 async function checkModel(){
  if(Date.now()-modelCheckedAt<MODEL_CHECK_MS)return modelAvailable;
  modelCheckedAt=Date.now();
- if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
+ if(['openai','moonshot','zai','openrouter','anthropic','nvidia'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
  try{
   const response=await fetch(`${SUPABASE_URL}/rest/v1/ai_provider_credentials?select=provider&limit=1`,{headers,signal:AbortSignal.timeout(5000)});
   if(response.ok&&(await response.json()).length){modelAvailable=true;return true}
@@ -80,7 +80,7 @@ async function usageThisMonth(userId){
  if(!response.ok)throw new Error('Cannot verify monthly AI budget');
  return Number(response.headers.get('content-range')?.split('/')[1]||0);
 }
-const PROVIDER_KEYS={openai:'OPENAI_API_KEY',moonshot:'MOONSHOT_API_KEY',zai:'ZAI_API_KEY',openrouter:'OPENROUTER_API_KEY',anthropic:'ANTHROPIC_API_KEY'};
+const PROVIDER_KEYS={openai:'OPENAI_API_KEY',moonshot:'MOONSHOT_API_KEY',zai:'ZAI_API_KEY',openrouter:'OPENROUTER_API_KEY',anthropic:'ANTHROPIC_API_KEY',nvidia:'NVIDIA_API_KEY'};
 async function credentialsFor(userId,settings){
  const env={...process.env};
  for(const provider of new Set([settings.provider,...(settings.fallback_enabled&&!settings.local_only?[settings.fallback_provider]:[])])){
