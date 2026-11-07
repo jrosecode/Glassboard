@@ -45,6 +45,7 @@ Deno.serve(async req=>{
  const {data:claim,error:claimError}=await admin.rpc("ai_chat_claim_specific",{p_id:replyId,p_worker_id:workerId});
  if(claimError)return json({error:"Unable to claim chat request"},503);
  if(!claim)return json({ok:true,status:"processing"},202);
+ try{
  const {data:turns,error:historyError}=await admin.from("ai_chat_messages")
   .select("role,content,created_at").eq("board_id",reply.board_id).eq("user_id",user.id)
   .lte("created_at",reply.created_at).order("created_at",{ascending:false}).limit(26);
@@ -62,9 +63,9 @@ Deno.serve(async req=>{
  const {data:cards,error:cardsError}=await client.from("cards")
   .select("id,list_id,title,description,priority,completed,due_at,is_archived,position")
   .eq("board_id",reply.board_id).eq("is_archived",false)
-  .order("position",{ascending:true}).limit(501);
+  .order("position",{ascending:true}).limit(251);
  if(cardsError)throw Error("Could not read the current board's cards");
- const truncated=(cards||[]).length>500||(lists||[]).length>=100;
+ const truncated=(cards||[]).length>250||(lists||[]).length>=100;
  const boardContext={
   board:{title:board.title,description:board.description?.slice(0,600)||""},
   scope:"current board only",
@@ -72,9 +73,9 @@ Deno.serve(async req=>{
   lists:(lists||[]).map(l=>({
    title:l.title,
    kind:l.kind,
-   cards:(cards||[]).filter(c=>c.list_id===l.id).slice(0,500).map(c=>({
+   cards:(cards||[]).filter(c=>c.list_id===l.id).slice(0,250).map(c=>({
     title:String(c.title||"").slice(0,300),
-    description:String(c.description||"").slice(0,650),
+    description:String(c.description||"").slice(0,350),
     priority:c.priority,
     completed:c.completed,
     due_at:c.due_at
@@ -117,7 +118,6 @@ Deno.serve(async req=>{
   if(typeof text!=="string"||!text.trim())throw Error("AI provider returned no text");
   return {text:text.slice(0,20000),provider,model,inputTokens:Number(data.usage?.input_tokens??data.usage?.prompt_tokens??0),outputTokens:Number(data.usage?.output_tokens??data.usage?.completion_tokens??0),durationMs:Date.now()-start};
  }
- try{
   if(historyError)throw Error("Unable to read the conversation");
   let generated:ModelResult;
   try{generated=await modelCall(current.provider,current.model_id)}
