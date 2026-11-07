@@ -19,6 +19,10 @@ async function checkModel(){
  if(Date.now()-modelCheckedAt<MODEL_CHECK_MS)return modelAvailable;
  modelCheckedAt=Date.now();
  if(['openai','moonshot','zai','openrouter','anthropic'].some(p=>providerAvailable(p))){modelAvailable=true;return true}
+ try{
+  const response=await fetch(`${SUPABASE_URL}/rest/v1/ai_provider_credentials?select=provider&limit=1`,{headers,signal:AbortSignal.timeout(5000)});
+  if(response.ok&&(await response.json()).length){modelAvailable=true;return true}
+ }catch{/* BYOK lookup unavailable; continue to local provider check. */}
  const endpoints=[
   {name:'Ollama',url:`${OLLAMA_URL}/api/tags`,modelsKey:'models'},
   {name:'LM Studio',url:`${(process.env.LMSTUDIO_URL||'http://127.0.0.1:1234').replace(/[/]$/,'')}/v1/models`,modelsKey:'data'}
