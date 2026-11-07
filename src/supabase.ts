@@ -7,7 +7,18 @@ const fail=(error:{message:string}|null)=>{if(error)throw new Error(error.messag
 export type AIProvider='ollama'|'lmstudio'|'openai'|'moonshot'|'zai'|'openrouter'|'anthropic';
 export type AISettingsData={provider:AIProvider;model_id:string;fallback_enabled:boolean;fallback_provider:AIProvider;fallback_model:string;local_only:boolean;max_monthly_runs:number;max_run_steps:number};
 export const DEFAULT_AI_SETTINGS:AISettingsData={provider:'ollama',model_id:'llama3.2',fallback_enabled:false,fallback_provider:'openai',fallback_model:'gpt-4.1-mini',local_only:false,max_monthly_runs:100,max_run_steps:6};
+export type AIChatMessage={id:string;user_id:string;board_id:string;role:'user'|'assistant';content:string;status:'queued'|'running'|'done'|'error';error:string|null;provider:string|null;model_id:string|null;created_at:string};
 export class SupabaseRepository {constructor(private db:SupabaseClient){ } 
+ async aiChatMessages(boardId:string):Promise<AIChatMessage[]>{
+  const {data,error}=await this.db.from('ai_chat_messages').select('id,user_id,board_id,role,content,status,error,provider,model_id,created_at').eq('board_id',boardId).order('created_at',{ascending:true}).order('id',{ascending:true}).limit(200);
+  fail(error);return (data??[]) as AIChatMessage[];
+ }
+ async aiChatSend(boardId:string,content:string):Promise<string>{
+  const message=content.trim();
+  if(!message||message.length>4000)throw new Error('Messages must be between 1 and 4000 characters');
+  const {data,error}=await this.db.rpc('ai_chat_send',{p_board_id:boardId,p_content:message});fail(error);return data as string;
+ }
+
  async getAISettings(userId:string):Promise<AISettingsData>{
   const {data,error}=await this.db.from('ai_user_settings').select('provider,model_id,fallback_enabled,fallback_provider,fallback_model,local_only,max_monthly_runs,max_run_steps').eq('user_id',userId).maybeSingle();
   fail(error);return data?{...DEFAULT_AI_SETTINGS,...data}:DEFAULT_AI_SETTINGS;
