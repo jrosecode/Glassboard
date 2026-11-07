@@ -15,7 +15,14 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
  }
  async aiChatGenerate(replyId:string):Promise<void>{
   const {data,error}=await this.db.functions.invoke('ai-chat',{body:{replyId}});
-  if(error)throw new Error(error.message||'Unable to contact AI provider');
+  if(error){
+   let detail='';
+   const context=(error as {context?:Response}).context;
+   if(context&&typeof context.json==='function'){
+    try{const body=await context.json() as {error?:string};if(typeof body?.error==='string')detail=body.error}catch{/* Keep the generic transport failure. */}
+   }
+   throw new Error(detail||error.message||'Unable to contact AI provider');
+  }
   if(data?.error)throw new Error(String(data.error));
  }
  async aiChatSend(boardId:string,content:string):Promise<string>{
