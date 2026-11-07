@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {Bot,Send,X,RefreshCw,Settings2} from 'lucide-react';
+import {Bot,Send,X,Settings2,UserRound} from 'lucide-react';
 import type {AIChatMessage,SupabaseRepository,AISettingsData} from './supabase';
 
 export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRepository|null;userId:string;boardId:string;onClose:()=>void;onSettings:()=>void}){
@@ -55,9 +55,17 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
     {!messages.length&&!loading&&<div className="ai-chat-welcome"><Bot size={30}/><h3>How can I help?</h3><p>Chat directly with your selected model. Your conversation is private to your account on this board.</p></div>}
     {loading&&<p className="ai-chat-note">Loading conversation…</p>}
     {messages.map(message=><div key={message.id} className={'ai-chat-turn '+message.role}>
-     <div className="ai-chat-bubble">
-      {message.status==='queued'||message.status==='running'?<span className="ai-chat-pending"><RefreshCw size={14}/>{message.status==='queued'?'Waiting for an AI worker…':'Generating a response…'}</span>:
-      message.status==='error'?<span role="alert">AI error: {message.error||'Could not generate a response'}</span>:
+     <div className="ai-chat-sender">
+      <span className="ai-chat-sender-icon" aria-hidden="true">{message.role==='user'?<UserRound size={13}/>:<Bot size={14}/>}</span>
+      <strong>{message.role==='user'?'You':'Glassboard AI'}</strong>
+     </div>
+     <div className={'ai-chat-bubble'+(message.status==='error'?' ai-chat-bubble-error':'')}>
+      {message.status==='queued'||message.status==='running'?
+       <span className="ai-chat-typing" role="status" aria-label="AI is preparing a reply">
+        <span className="ai-chat-typing-dots" aria-hidden="true"><i/><i/><i/></span>
+        <span className="ai-chat-sr-only">AI is typing</span>
+       </span>:
+      message.status==='error'?<span role="alert">{message.error||'The AI could not generate a response.'}</span>:
       <span className="ai-chat-message-text">{message.content}</span>}
      </div>
      {message.role==='assistant'&&message.provider&&message.status==='done'&&<small>{message.provider} · {message.model_id}</small>}
@@ -71,7 +79,7 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
     {!repo&&<p className="ai-chat-error">Connect Supabase to chat with your AI model.</p>}
     <div className="ai-chat-compose-row">
      <textarea aria-label="Message AI" placeholder="Ask your AI anything…" rows={2} maxLength={4000} value={draft} disabled={!repo||sending||busy||providerMissing||modelLooksLikeKey} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.currentTarget.form?.requestSubmit()}}}/>
-     <button type="submit" aria-label="Send message" title="Send message" disabled={!repo||!draft.trim()||sending||busy||providerMissing||modelLooksLikeKey}><Send size={19}/></button>
+     <button type="submit" className="ai-chat-send-button" aria-label="Send message" title="Send message" disabled={!repo||!draft.trim()||sending||busy||providerMissing||modelLooksLikeKey}><Send size={17}/><span>Send</span></button>
     </div>
     <small>{busy?'Wait for the current reply before sending another message.':'Enter to send · Shift+Enter for a new line'}</small>
    </form>
