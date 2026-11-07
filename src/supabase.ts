@@ -4,7 +4,7 @@ export const config={url:import.meta.env.VITE_SUPABASE_URL as string|undefined,k
 export const isConfigured=Boolean(config.url&&config.key&&!config.key.includes('your-'));
 export const supabase:SupabaseClient|null=isConfigured?createClient(config.url!,config.key!,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const fail=(error:{message:string}|null)=>{if(error)throw new Error(error.message)};
-export type AIProvider='ollama'|'lmstudio'|'openai'|'moonshot'|'zai'|'openrouter'|'anthropic';
+export type AIProvider='ollama'|'lmstudio'|'openai'|'moonshot'|'zai'|'openrouter'|'anthropic'|'nvidia';
 export type AISettingsData={provider:AIProvider;model_id:string;fallback_enabled:boolean;fallback_provider:AIProvider;fallback_model:string;local_only:boolean;max_monthly_runs:number;max_run_steps:number};
 export const DEFAULT_AI_SETTINGS:AISettingsData={provider:'ollama',model_id:'llama3.2',fallback_enabled:false,fallback_provider:'openai',fallback_model:'gpt-4.1-mini',local_only:false,max_monthly_runs:100,max_run_steps:6};
 export type AIChatMessage={id:string;user_id:string;board_id:string;role:'user'|'assistant';content:string;status:'queued'|'running'|'done'|'error';error:string|null;provider:string|null;model_id:string|null;created_at:string};
@@ -29,6 +29,7 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
   fail(error);return data?{...DEFAULT_AI_SETTINGS,...data}:DEFAULT_AI_SETTINGS;
  }
  async saveAISettings(userId:string,settings:AISettingsData):Promise<void>{
+  if(/^(nvapi-|sk-|sk_|AIza|ghp_|glpat-|hf_)/i.test(settings.model_id)||/^(nvapi-|sk-|sk_|AIza|ghp_|glpat-|hf_)/i.test(settings.fallback_model))throw new Error('An API key was entered as a model name. Choose a model ID and save the key under API connections.');
   if(!settings.model_id.trim()||settings.model_id.length>120||!settings.fallback_model.trim()||settings.fallback_model.length>120)throw new Error('Model IDs must be 1 to 120 characters');
   const {error}=await this.db.from('ai_user_settings').upsert({user_id:userId,...settings,updated_at:new Date().toISOString()},{onConflict:'user_id'});
   fail(error);
@@ -43,7 +44,7 @@ export class SupabaseRepository {constructor(private db:SupabaseClient){ }
   return (data??[]).map((r:{provider:string})=>r.provider);
  }
  async saveProviderKey(provider:AIProvider,key:string):Promise<void>{
-  if(!['openai','moonshot','zai','openrouter','anthropic'].includes(provider))throw new Error('Cloud provider required');
+  if(!['openai','moonshot','zai','openrouter','anthropic','nvidia'].includes(provider))throw new Error('Cloud provider required');
   const {error}=await this.db.rpc('ai_save_provider_key',{p_provider:provider,p_key:key});
   fail(error);
  }
