@@ -1,2 +1,3 @@
 import React from 'react';import ReactDOM from 'react-dom/client';import {BrowserRouter} from 'react-router-dom';import {App} from './App';import type {SupabaseRepository} from './supabase';import './index.css';import './productivity.css';
+import './reference-theme.css';
 const testMode=import.meta.env.MODE==='test'&&new URLSearchParams(location.search).get('test')==='1';const injectedRepository=import.meta.env.DEV?(window as typeof window&{__GLASSBOARD_E2E_REPOSITORY__?:SupabaseRepository}).__GLASSBOARD_E2E_REPOSITORY__:undefined;ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><App testMode={testMode} repository={injectedRepository}/></BrowserRouter></React.StrictMode>);
