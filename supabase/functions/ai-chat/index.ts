@@ -11,7 +11,8 @@ const providers:Record<string,{endpoint:string;secretName:string}>={
  moonshot:{endpoint:"https://api.moonshot.ai/v1/chat/completions",secretName:"MOONSHOT_API_KEY"},
  zai:{endpoint:"https://api.z.ai/api/paas/v4/chat/completions",secretName:"ZAI_API_KEY"},
  openrouter:{endpoint:"https://openrouter.ai/api/v1/chat/completions",secretName:"OPENROUTER_API_KEY"},
- anthropic:{endpoint:"https://api.anthropic.com/v1/messages",secretName:"ANTHROPIC_API_KEY"}
+ anthropic:{endpoint:"https://api.anthropic.com/v1/messages",secretName:"ANTHROPIC_API_KEY"},
+ nvidia:{endpoint:"https://integrate.api.nvidia.com/v1/chat/completions",secretName:"NVIDIA_API_KEY"}
 };
 type ModelResult={text:string;provider:string;model:string;inputTokens:number;outputTokens:number;durationMs:number};
 Deno.serve(async req=>{
@@ -35,7 +36,7 @@ Deno.serve(async req=>{
  const {data:settings,error:settingsError}=await admin.from("ai_user_settings").select("*").eq("user_id",user.id).maybeSingle();
  if(settingsError)return json({error:"Unable to load model settings"},503);
  const current=settings||{provider:"ollama",model_id:"llama3.2",fallback_enabled:false,local_only:false,max_monthly_runs:100};
- if(current.local_only||current.provider==="ollama"||current.provider==="lmstudio")return json({ok:true,status:"queued",notice:"Local model requires a connected AI worker"},202);
+ if(current.local_only||current.provider==="ollama"||current.provider==="lmstudio")return json({error:"The selected model runs locally and requires a connected AI worker. Choose a cloud provider in AI Settings to chat without a worker."},409);
  const startOfMonth=new Date();startOfMonth.setUTCDate(1);startOfMonth.setUTCHours(0,0,0,0);
  const {count, error:usageError}=await admin.from("ai_usage_events").select("id",{count:"exact",head:true}).eq("user_id",user.id).gte("created_at",startOfMonth.toISOString());
  if(usageError)return json({error:"Usage limit could not be checked"},503);
