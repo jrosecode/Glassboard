@@ -248,3 +248,27 @@
   }
   .mobile-card-composer .glass-button[aria-label="Cancel"]{display:grid;place-items:center;padding:8px}
 }
+
+/* Mobile Kanban paging: each horizontal gesture settles on a complete list.
+   Keep vertical scrolling inside each list; don't alter drag or card styles. */
+@media (max-width:650px) {
+  .neon-app .board-grid {
+    scroll-snap-type: x mandatory !important;
+    scroll-padding-inline-start: 0 !important;
+    scroll-padding-inline-end: 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+  .neon-app .board-grid > .sortable-list {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .neon-app .board-grid .card-stack {
+    overflow-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+}
