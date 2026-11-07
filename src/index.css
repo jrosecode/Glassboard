@@ -845,3 +845,9 @@ button,input,textarea,select{font-family:inherit}
  .ai-metrics>div{padding:9px}
  .ai-metrics strong{font-size:13px}
 }
+
+.ai-key-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ai-key-actions button{border:1px solid #8f6bc5;border-radius:8px;background:#513770;color:#f5f1ff;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.ai-key-actions button:last-child:not(:first-child){border-color:#77565f;background:#38262f;color:#f8d6db}
+.ai-key-actions button:hover:not(:disabled){filter:brightness(1.15)}
+.ai-key-actions button:disabled{opacity:.5;cursor:not-allowed}
