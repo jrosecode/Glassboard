@@ -7,7 +7,7 @@ const PROVIDERS={
  ollama:{base:'http://127.0.0.1:11434/v1',key:null,defaultModel:'llama3.2'},
  lmstudio:{base:'http://127.0.0.1:1234/v1',key:null,defaultModel:'local-model'},
  anthropic:{base:'https://api.anthropic.com',key:'ANTHROPIC_API_KEY',defaultModel:'claude-sonnet-4-5'},
- nvidia:{base:'https://integrate.api.nvidia.com/v1',key:'NVIDIA_API_KEY',defaultModel:'meta/llama-3.1-70b-instruct'}
+ nvidia:{base:'https://integrate.api.nvidia.com/v1',key:'NVIDIA_API_KEY',defaultModel:'mistralai/mistral-large-4-1t-a52b'}
 };
 export const providerNames=Object.keys(PROVIDERS);
 export function providerAvailable(name,env=process.env){
