@@ -10,8 +10,8 @@ export const DEFAULT_AI_SETTINGS:AISettingsData={provider:'ollama',model_id:'lla
 export type AIChatMessage={id:string;user_id:string;board_id:string;role:'user'|'assistant';content:string;status:'queued'|'running'|'done'|'error';error:string|null;provider:string|null;model_id:string|null;created_at:string};
 export class SupabaseRepository {constructor(private db:SupabaseClient){ } 
  async aiChatMessages(boardId:string):Promise<AIChatMessage[]>{
-  const {data,error}=await this.db.from('ai_chat_messages').select('id,user_id,board_id,role,content,status,error,provider,model_id,created_at').eq('board_id',boardId).order('created_at',{ascending:true}).order('id',{ascending:true}).limit(200);
-  fail(error);return (data??[]) as AIChatMessage[];
+  const {data,error}=await this.db.from('ai_chat_messages').select('id,user_id,board_id,role,content,status,error,provider,model_id,created_at').eq('board_id',boardId).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(200);
+  fail(error);return ((data??[]) as AIChatMessage[]).reverse();
  }
  async aiChatSend(boardId:string,content:string):Promise<string>{
   const message=content.trim();
