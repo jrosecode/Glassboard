@@ -33,8 +33,10 @@ export function AIChat({repo,userId,boardId,onClose,onSettings}:{repo:SupabaseRe
   if(!repo||!text||sending||busy)return;
   setSending(true);setError('');
   try{
-   await repo.aiChatSend(boardId,text);
+   const replyId=await repo.aiChatSend(boardId,text);
    setDraft('');
+   setMessages(await repo.aiChatMessages(boardId));
+   await repo.aiChatGenerate(replyId);
    setMessages(await repo.aiChatMessages(boardId));
   }catch(cause){setError(cause instanceof Error?cause.message:'Unable to send message')}
   finally{setSending(false)}
