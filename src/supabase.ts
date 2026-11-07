@@ -4,7 +4,28 @@ export const config={url:import.meta.env.VITE_SUPABASE_URL as string|undefined,k
 export const isConfigured=Boolean(config.url&&config.key&&!config.key.includes('your-'));
 export const supabase:SupabaseClient|null=isConfigured?createClient(config.url!,config.key!,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const fail=(error:{message:string}|null)=>{if(error)throw new Error(error.message)};
-export class SupabaseRepository {constructor(private db:SupabaseClient){ }
+export type AIProvider='ollama'|'lmstudio'|'openai'|'moonshot'|'zai'|'openrouter'|'anthropic';
+export type AISettingsData={provider:AIProvider;model_id:string;fallback_enabled:boolean;fallback_provider:AIProvider;fallback_model:string;local_only:boolean;max_monthly_runs:number;max_run_steps:number};
+export const DEFAULT_AI_SETTINGS:AISettingsData={provider:'ollama',model_id:'llama3.2',fallback_enabled:false,fallback_provider:'openai',fallback_model:'gpt-4.1-mini',local_only:false,max_monthly_runs:100,max_run_steps:6};
+export class SupabaseRepository {constructor(private db:SupabaseClient){ } 
+ async getAISettings(userId:string):Promise<AISettingsData>{
+  const {data,error}=await this.db.from('ai_user_settings').select('provider,model_id,fallback_enabled,fallback_provider,fallback_model,local_only,max_monthly_runs,max_run_steps').eq('user_id',userId).maybeSingle();
+  fail(error);return data?{...DEFAULT_AI_SETTINGS,...data}:DEFAULT_AI_SETTINGS;
+ }
+ async saveAISettings(userId:string,settings:AISettingsData):Promise<void>{
+  if(!settings.model_id.trim()||settings.model_id.length>120||!settings.fallback_model.trim()||settings.fallback_model.length>120)throw new Error('Model IDs must be 1 to 120 characters');
+  const {error}=await this.db.from('ai_user_settings').upsert({user_id:userId,...settings,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  fail(error);
+ }
+ async aiMonthlyUsage():Promise<{runs:number;inputTokens:number;outputTokens:number;estimatedCostUsd:number}>{
+  const {data,error}=await this.db.rpc('ai_monthly_usage');fail(error);
+  return {runs:Number(data?.runs??0),inputTokens:Number(data?.inputTokens??0),outputTokens:Number(data?.outputTokens??0),estimatedCostUsd:Number(data?.estimatedCostUsd??0)};
+ }
+ async aiWorkerHealth():Promise<{workerOnline:boolean;queuedRuns:number;runningRuns:number}>{
+  const {data,error}=await this.db.rpc('agent_runtime_health');fail(error);
+  return {workerOnline:Boolean(data?.workerOnline),queuedRuns:Number(data?.queuedRuns??0),runningRuns:Number(data?.runningRuns??0)};
+ }
+
  async workspaces(){const {data,error}=await this.db.from('workspaces').select('*').order('created_at');fail(error);return data as Workspace[]}
  async boards(){const {data,error}=await this.db.from('boards').select('*').order('updated_at',{ascending:false});fail(error);return (data??[]).map((b:any)=>({id:b.id,title:b.title,description:b.description??'',background:b.background,favorite:b.is_favorite,workspaceId:b.workspace_id,updatedAt:b.updated_at})) as Board[]}
  async ensureDefaultBoard(){const {data,error}=await this.db.rpc('ensure_default_board');fail(error);const b=data as any;return {id:b.id,title:b.title,description:b.description??'',background:b.background,favorite:b.is_favorite,workspaceId:b.workspace_id,updatedAt:b.updated_at} as Board}
