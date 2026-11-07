@@ -72,3 +72,7 @@ The same Supabase project is ready for an iOS client, including email/password a
 ## AI-agent integration
 
 Glassboard exposes an authenticated, user-scoped Supabase Edge Function for agent CRUD and AI queue actions. See [Agent API and Hermes setup](docs/agent-api.md). The separate Ollama worker must run on a persistent machine; its online status is visible through the API health endpoint.
+
+## AI model providers
+
+Use **Settings → AI Providers & Models** to select cloud APIs, encrypted personal API keys, or local Ollama/LM Studio models. See [AI provider setup, worker requirements, and current limitations](docs/ai-provider-setup.md). Model jobs only execute while a persistent worker is running.
